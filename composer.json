@@ -1,0 +1,132 @@
+{
+    "$schema": "https://getcomposer.org/schema.json",
+    "name": "shipwelldev/cornerstone",
+    "type": "project",
+    "description": "A highly opinionated Laravel Livewire starter kit by Ship Well Development.",
+    "keywords": [
+        "laravel",
+        "livewire",
+        "starter-kit"
+    ],
+    "homepage": "https://github.com/shipwelldev/cornerstone",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Ship Well Development",
+            "homepage": "https://shipwell.dev"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/shipwelldev/cornerstone/issues",
+        "source": "https://github.com/shipwelldev/cornerstone"
+    },
+    "require": {
+        "glhd/bits": "^0.6",
+        "laravel/framework": "^13.20",
+        "laravel/tinker": "^3.0",
+        "livewire/livewire": "^4.3",
+        "php": "~8.4.0 || ~8.5.0"
+    },
+    "require-dev": {
+        "fakerphp/faker": "^1.23",
+        "larastan/larastan": "^3.0",
+        "laravel/boost": "^2.2",
+        "laravel/pail": "^1.2.5",
+        "laravel/pao": "^1.0.6",
+        "laravel/pint": "^1.27",
+        "mockery/mockery": "^1.6",
+        "nunomaduro/collision": "^8.6",
+        "pestphp/pest": "^4.7",
+        "pestphp/pest-plugin-browser": "^4.3",
+        "pestphp/pest-plugin-laravel": "^4.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/",
+            "Database\\Factories\\": "database/factories/",
+            "Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "analyse": [
+            "@php vendor/bin/phpstan analyse --memory-limit=2G"
+        ],
+        "build": [
+            "npm run build"
+        ],
+        "fix": [
+            "@php vendor/bin/pint --format agent"
+        ],
+        "pest": [
+            "@php artisan test --compact"
+        ],
+        "pint": [
+            "@php vendor/bin/pint --format agent"
+        ],
+        "prepare-environment": [
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
+            "@php -r \"\\$environment = file_get_contents('.env'); if (\\$environment === false || preg_match('/^APP_KEY=.+$/m', \\$environment) !== 1) { passthru(escapeshellarg(PHP_BINARY) . ' artisan key:generate --ansi --no-interaction', \\$exitCode); exit(\\$exitCode); }\""
+        ],
+        "setup": [
+            "@composer install --no-interaction --prefer-dist @no_additional_args",
+            "@prepare-environment",
+            "npm ci @no_additional_args",
+            "npx playwright install chromium @no_additional_args",
+            "npm run build @no_additional_args"
+        ],
+        "dev": [
+            "Composer\\Config::disableProcessTimeout",
+            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1 --timeout=0\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"
+        ],
+        "test": [
+            "@php artisan test --parallel --compact"
+        ],
+        "verify": [
+            "@php vendor/bin/pint --test --format agent",
+            "@analyse",
+            "@test",
+            "@build"
+        ],
+        "post-autoload-dump": [
+            "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
+            "@php artisan package:discover --ansi"
+        ],
+        "post-update-cmd": [
+            "@php artisan vendor:publish --tag=laravel-assets --ansi --force",
+            "@php artisan boost:update --ansi"
+        ],
+        "post-root-package-install": [
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
+        ],
+        "post-create-project-cmd": [
+            "@prepare-environment",
+            "npm ci @no_additional_args",
+            "npx playwright install chromium @no_additional_args",
+            "npm run build @no_additional_args"
+        ],
+        "pre-package-uninstall": [
+            "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
+        ]
+    },
+    "extra": {
+        "laravel": {
+            "dont-discover": []
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "php-http/discovery": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

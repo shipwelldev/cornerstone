@@ -1,0 +1,32 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+    - vendor/nesbot/carbon/extension.neon
+
+parameters:
+    paths:
+        - app/
+        - artisan
+        - bootstrap/app.php
+        - bootstrap/providers.php
+        - config/
+        - database/
+        - public/index.php
+        - routes/
+
+    level: 10
+
+    ignoreErrors:
+        # Permanent workaround: Larastan refuses to properly infer Laravel factory generics from attributes.
+        # Re-evaluate if support is added: https://github.com/larastan/larastan/issues/2328
+        -
+            message: '#uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory#'
+            identifier: missingType.generics
+            path: app/Models/*
+            reportUnmatched: true
+        # Permanent workaround: Larastan also ignores Laravel's UseModel attribute too.
+        # Re-evaluate if support is added: https://github.com/larastan/larastan/issues/2328
+        -
+            message: '#extends generic class Illuminate\\Database\\Eloquent\\Factories\\Factory#'
+            identifier: missingType.generics
+            path: database/factories/*
+            reportUnmatched: true
