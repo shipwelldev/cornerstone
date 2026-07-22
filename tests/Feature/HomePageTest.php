@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
-test('the home page presents the application foundation', function (): void {
+test('the home page presents the canonical example', function (): void {
     $this->get(route('home'))
         ->assertSuccessful()
-        ->assertSeeInOrder(['Build from a solid', 'cornerstone.'])
-        ->assertSee('Livewire + Tailwind ready')
-        ->assertSee('Server-backed counter');
+        ->assertSee('Canonical example')
+        ->assertSee('Expedition planner')
+        ->assertSee('Follow the vertical slice')
+        ->assertSee('What belongs in CONTEXT.md?')
+        ->assertSee('/remove-example');
 });

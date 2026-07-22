@@ -16,6 +16,11 @@ parameters:
     level: 10
 
     ignoreErrors:
+        # Permanent: native PHP cannot declare iterable element types, and Cornerstone
+        # uses formal objects rather than PHPDoc for application-owned structures.
+        -
+            identifier: missingType.iterableValue
+            reportUnmatched: false
         # Permanent workaround: Larastan refuses to properly infer Laravel factory generics from attributes.
         # Re-evaluate if support is added: https://github.com/larastan/larastan/issues/2328
         -
