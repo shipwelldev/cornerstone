@@ -36,7 +36,7 @@ A human-approved exception changes neither the Rule nor its default enforcement.
 
 ### Eloquent and persistence
 
-- Every application-owned model explicitly declares mass-assignment metadata and its factory through supported attributes. Hidden, visible, cast, table, connection, timestamp, and key metadata are explicit whenever behavior differs from an unambiguous framework default.
+- Every application-owned model explicitly declares mass-assignment metadata through a supported attribute. When a model has a factory, it declares that factory through a supported attribute. Hidden, visible, cast, table, connection, timestamp, and key metadata are explicit whenever behavior differs from an unambiguous framework default.
 - Every Eloquent relationship is an explicitly named model method with an accurate native `Relation` subtype return type.
 - Tests create application models through factories and useful factory states rather than duplicating model construction.
 - Migrations are safe for populated databases, preserve data intentionally, use matching key types and indexes, and avoid environment-specific schema behavior.
