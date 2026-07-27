@@ -45,6 +45,26 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
 
+      - name: Patch Pest browser shutdown
+        shell: bash
+        run: |
+          # Remove after https://github.com/pestphp/pest/issues/1754 is fixed upstream.
+          php <<'PHP'
+          <?php
+
+          $path = 'vendor/pestphp/pest-plugin-browser/src/ServerManager.php';
+          $contents = file_get_contents($path);
+          $search = "            '.'.DIRECTORY_SEPARATOR.'node_modules'";
+          $replacement = "            'exec .'.DIRECTORY_SEPARATOR.'node_modules'";
+
+          if (substr_count($contents, $search) !== 1) {
+              fwrite(STDERR, "Unable to apply the Pest browser shutdown patch.\n");
+              exit(1);
+          }
+
+          file_put_contents($path, str_replace($search, $replacement, $contents));
+          PHP
+
       - name: Install npm dependencies
         run: npm ci
 
@@ -57,23 +77,5 @@ jobs:
       - name: Generate app key
         run: php artisan key:generate
 
-      - name: Check formatting
-        run: php vendor/bin/pint --test --format agent
-
-      - name: Analyse application
-        run: composer analyse
-
-      - name: Test application
-        shell: bash
-        run: |
-          set +e
-          # Work around https://github.com/pestphp/pest/issues/1754.
-          setsid php artisan test --ci --parallel --compact &
-          test_pid=$!
-          wait "$test_pid"
-          status=$?
-          kill -- "-$test_pid" 2>/dev/null || true
-          exit "$status"
-
-      - name: Build assets
-        run: composer build
+      - name: Verify application
+        run: composer verify
