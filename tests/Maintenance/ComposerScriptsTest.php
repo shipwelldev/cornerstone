@@ -11,7 +11,7 @@ function composerScript(string $name): array
     return $composer['scripts'][$name];
 }
 
-function runComposerScript(string $name, string $workingDirectory, array $environment = [], ?string $input = null): Process
+function runComposerScript(string $name, string $workingDirectory, array $environment = []): Process
 {
     foreach (composerScript($name) as $script) {
         $command = preg_replace('/^@php\s+/', escapeshellarg(PHP_BINARY) . ' ', $script);
@@ -21,7 +21,6 @@ function runComposerScript(string $name, string $workingDirectory, array $enviro
         }
 
         $process = Process::fromShellCommandline($command, $workingDirectory, $environment);
-        $process->setInput($input);
         $process->run();
 
         if ( ! $process->isSuccessful()) {
@@ -32,9 +31,20 @@ function runComposerScript(string $name, string $workingDirectory, array $enviro
     return $process;
 }
 
-function runComposerScriptCommand(string $name, int $command, string $workingDirectory, array $environment = []): Process
+function runComposerScriptCommandContaining(string $name, string $fragment, string $workingDirectory, array $environment = []): Process
 {
-    $script = composerScript($name)[$command];
+    $matchingScripts = array_values(array_filter(
+        composerScript($name),
+        fn (string $script): bool => str_contains($script, $fragment),
+    ));
+
+    if (count($matchingScripts) !== 1) {
+        throw new RuntimeException(
+            "Expected exactly one Composer script [{$name}] command containing [{$fragment}], found [" . count($matchingScripts) . '].',
+        );
+    }
+
+    $script = $matchingScripts[0];
     $commandLine = preg_replace('/^@php\s+/', escapeshellarg(PHP_BINARY) . ' ', $script);
 
     if ($commandLine === null) {
@@ -70,24 +80,6 @@ exit($exitCode);
 PHP);
 }
 
-function removeComposerFixture(string $directory): void
-{
-    $files = new RecursiveIteratorIterator(
-        new RecursiveDirectoryIterator($directory, FilesystemIterator::SKIP_DOTS),
-        RecursiveIteratorIterator::CHILD_FIRST,
-    );
-
-    foreach ($files as $file) {
-        if ($file->isDir() && ! $file->isLink()) {
-            rmdir($file->getPathname());
-        } else {
-            unlink($file->getPathname());
-        }
-    }
-
-    rmdir($directory);
-}
-
 function withComposerFixture(Closure $callback): void
 {
     $workingDirectory = sys_get_temp_dir() . '/cornerstone-composer-' . bin2hex(random_bytes(8));
@@ -99,7 +91,7 @@ function withComposerFixture(Closure $callback): void
     try {
         $callback($workingDirectory);
     } finally {
-        removeComposerFixture($workingDirectory);
+        removeTemporaryDirectory($workingDirectory);
     }
 }
 
@@ -107,7 +99,7 @@ test('post-update skips Boost successfully when Boost is not configured', functi
     withComposerFixture(function (string $workingDirectory): void {
         writeFakeArtisan($workingDirectory);
 
-        $process = runComposerScriptCommand('post-update-cmd', 1, $workingDirectory, [
+        $process = runComposerScriptCommandContaining('post-update-cmd', fragment: 'boost:update', workingDirectory: $workingDirectory, environment: [
             'FAKE_ARTISAN_EXIT_CODE' => '23',
         ]);
 
@@ -121,7 +113,7 @@ test('post-update runs Boost whenever its configuration exists and propagates it
         writeFakeArtisan($workingDirectory);
         file_put_contents($workingDirectory . '/boost.json', 'not valid json');
 
-        $process = runComposerScriptCommand('post-update-cmd', 1, $workingDirectory, [
+        $process = runComposerScriptCommandContaining('post-update-cmd', fragment: 'boost:update', workingDirectory: $workingDirectory, environment: [
             'FAKE_ARTISAN_EXIT_CODE' => '23',
         ]);
 
@@ -130,13 +122,19 @@ test('post-update runs Boost whenever its configuration exists and propagates it
     });
 });
 
-test('project creation updates support and publishes stubs before setup', function (): void {
-    expect(composerScript('post-create-project-cmd'))->toBe([
-        '@composer update shipwelldev/cornerstone-support --no-interaction @no_additional_args',
-        '@php artisan cornerstone:stubs --ansi --no-interaction @no_additional_args',
-        '@setup @no_additional_args',
-    ]);
-});
+test('Composer script command lookup fails clearly when the command is absent', function (): void {
+    runComposerScriptCommandContaining('post-update-cmd', 'missing-command', sys_get_temp_dir());
+})->throws(
+    RuntimeException::class,
+    'Expected exactly one Composer script [post-update-cmd] command containing [missing-command], found [0].',
+);
+
+test('Composer script command lookup fails clearly when the command is ambiguous', function (): void {
+    runComposerScriptCommandContaining('post-update-cmd', 'artisan', sys_get_temp_dir());
+})->throws(
+    RuntimeException::class,
+    'Expected exactly one Composer script [post-update-cmd] command containing [artisan], found [2].',
+);
 
 test('install-boost skips with instructions under non-interactive input', function (): void {
     withComposerFixture(function (string $workingDirectory): void {

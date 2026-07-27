@@ -36,21 +36,6 @@ function buildReleaseArchiveFromWorkingTree(): string
     return $exportDirectory;
 }
 
-function removeReleaseArchive(string $exportDirectory): void
-{
-    $temporaryDirectory = dirname($exportDirectory);
-    $files = new RecursiveIteratorIterator(
-        new RecursiveDirectoryIterator($temporaryDirectory, FilesystemIterator::SKIP_DOTS),
-        RecursiveIteratorIterator::CHILD_FIRST,
-    );
-
-    foreach ($files as $file) {
-        $file->isDir() ? rmdir($file->getPathname()) : unlink($file->getPathname());
-    }
-
-    rmdir($temporaryDirectory);
-}
-
 test('release archives contain application files and exclude repository maintenance files', function (): void {
     $exportDirectory = buildReleaseArchiveFromWorkingTree();
 
@@ -91,7 +76,7 @@ test('release archives contain application files and exclude repository maintena
             expect(file_exists($exportDirectory . '/' . $path))->toBeFalse("Expected {$path} to be excluded from the release archive.");
         }
     } finally {
-        removeReleaseArchive($exportDirectory);
+        removeTemporaryDirectory(dirname($exportDirectory));
     }
 });
 
@@ -116,6 +101,6 @@ test('relative Markdown file links in the exported README resolve', function ():
             expect(file_exists($exportDirectory . '/' . $link))->toBeTrue("README link does not resolve in the release archive: {$link}");
         }
     } finally {
-        removeReleaseArchive($exportDirectory);
+        removeTemporaryDirectory(dirname($exportDirectory));
     }
 });
