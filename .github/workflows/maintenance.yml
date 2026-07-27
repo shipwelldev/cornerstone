@@ -1,10 +1,9 @@
-name: Maintenance Tests
+name: Cornerstone Maintenance
 
 on:
   push:
     branches:
       - main
-      - '*.x'
   pull_request:
 
 permissions:
@@ -14,13 +13,6 @@ jobs:
   tests:
     runs-on: ubuntu-latest
 
-    strategy:
-      fail-fast: true
-      matrix:
-        php: [8.4, 8.5]
-
-    name: PHP ${{ matrix.php }}
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -28,7 +20,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php }}
+          php-version: '8.5'
           extensions: dom, curl, libxml, mbstring, zip
           coverage: none
 

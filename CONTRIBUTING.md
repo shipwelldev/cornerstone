@@ -60,3 +60,15 @@ git archive --format=tar HEAD | tar -tf -
 Confirm that maintenance tests, maintenance configuration, contributor documentation, and repository-only workflows are absent while application tests and standards remain.
 
 The canonical expedition example is downstream application content, not repository maintenance scaffolding. Keep its implementation and tests in exports until the project deliberately replaces or removes it through the provided removal workflow.
+
+## Release a version
+
+Before tagging a release, update `CHANGELOG.md`, run the application quality gate and maintenance test suite documented above, and inspect the project archive to confirm its exported contents.
+
+After publishing the tag and waiting for Packagist to index it, dispatch the release smoke workflow against the published version:
+
+```shell
+gh workflow run release-smoke.yml --ref <tag> -f package_version=<published-version>
+```
+
+The release smoke workflow runs after publication because it creates an application from the actual Packagist distribution rather than from the repository checkout. Confirm that it passes before announcing the release.
