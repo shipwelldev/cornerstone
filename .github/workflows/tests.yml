@@ -64,16 +64,19 @@ jobs:
         run: composer analyse
 
       - name: Test application
+        run: php artisan test --ci --parallel --compact --exclude-testsuite=Browser
+
+      - name: Test browser
         shell: bash
         run: |
           set +e
           # Work around https://github.com/pestphp/pest/issues/1754.
-          setsid --wait php artisan test --ci --parallel --compact > "$RUNNER_TEMP/pest.log" 2>&1 &
+          setsid --wait php artisan test --ci --compact --testsuite=Browser > "$RUNNER_TEMP/pest-browser.log" 2>&1 &
           test_pid=$!
           wait "$test_pid"
           status=$?
           kill -- "-$test_pid" 2>/dev/null || true
-          cat "$RUNNER_TEMP/pest.log"
+          cat "$RUNNER_TEMP/pest-browser.log"
           exit "$status"
 
       - name: Build assets
