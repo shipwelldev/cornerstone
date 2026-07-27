@@ -8,8 +8,11 @@
 
 CHANGELOG.md export-ignore
 CONTRIBUTING.md export-ignore
-LICENSE.md export-ignore
 .styleci.yml export-ignore
 /phpunit.maintenance.xml export-ignore
+/.github/workflows/issues.yml export-ignore
 /.github/workflows/maintenance.yml export-ignore
-/tests/Maintenance/** export-ignore
+/.github/workflows/pull-requests.yml export-ignore
+/.github/workflows/release-smoke.yml export-ignore
+/.github/workflows/update-changelog.yml export-ignore
+/tests/Maintenance export-ignore
