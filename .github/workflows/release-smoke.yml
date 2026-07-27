@@ -1,0 +1,85 @@
+name: Release Smoke Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      package_version:
+        description: Published Composer version to install (for example, 1.2.3)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  create-project:
+    name: Create project from ${{ inputs.package_version }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: dom, curl, libxml, mbstring, zip
+          coverage: none
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Create project non-interactively
+        env:
+          COMPOSER_NO_INTERACTION: '1'
+          PACKAGE_VERSION: ${{ inputs.package_version }}
+        shell: bash
+        run: |
+          if [[ ! "$PACKAGE_VERSION" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            printf 'Invalid package version: %s\n' "$PACKAGE_VERSION" >&2
+            exit 1
+          fi
+
+          composer create-project shipwelldev/cornerstone smoke-app "$PACKAGE_VERSION" --prefer-dist --no-interaction --no-progress
+
+      - name: Verify project creation
+        working-directory: smoke-app
+        shell: bash
+        run: |
+          test -f .env
+          app_key="$(php -r '$environment = file_get_contents(".env"); preg_match("/^APP_KEY=(.+)$/m", $environment, $matches); echo trim($matches[1] ?? "");')"
+          test -n "$app_key"
+
+          test -s stubs/data.stub
+          test -s stubs/livewire.stub
+          test -s stubs/pest.stub
+          test "$(find stubs -type f | wc -l)" -ge 3
+
+          test -d vendor
+          test -d node_modules
+          test -s public/build/manifest.json
+          test ! -e database/database.sqlite
+
+          test ! -e phpunit.maintenance.xml
+          test ! -e tests/Maintenance
+          test ! -e .github/workflows/maintenance.yml
+          test ! -e .github/workflows/release-smoke.yml
+
+          printf '\n// release smoke sentinel\n' >> stubs/data.stub
+          printf '%s' "$app_key" > /tmp/cornerstone-app-key
+
+      - name: Verify setup is repeatable
+        working-directory: smoke-app
+        env:
+          COMPOSER_NO_INTERACTION: '1'
+        run: composer setup --no-interaction
+
+      - name: Verify setup preserves application state
+        working-directory: smoke-app
+        shell: bash
+        run: |
+          app_key="$(php -r '$environment = file_get_contents(".env"); preg_match("/^APP_KEY=(.+)$/m", $environment, $matches); echo trim($matches[1] ?? "");')"
+          test "$app_key" = "$(cat /tmp/cornerstone-app-key)"
+          grep -Fq '// release smoke sentinel' stubs/data.stub
+          test -s public/build/manifest.json
+          test ! -e database/database.sqlite

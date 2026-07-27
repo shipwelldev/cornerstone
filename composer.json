@@ -73,9 +73,13 @@
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
             "@php -r \"\\$environment = file_get_contents('.env'); if (\\$environment === false || preg_match('/^APP_KEY=.+$/m', \\$environment) !== 1) { passthru(escapeshellarg(PHP_BINARY) . ' artisan key:generate --ansi --no-interaction', \\$exitCode); exit(\\$exitCode); }\""
         ],
+        "install-boost": [
+            "@php -r \"\\$nonInteractive = filter_var(getenv('COMPOSER_NO_INTERACTION'), FILTER_VALIDATE_BOOL); if (file_exists('boost.json')) { exit(0); } if (\\$nonInteractive || ! stream_isatty(STDIN)) { fwrite(STDOUT, PHP_EOL . 'Boost setup was skipped because Composer is running non-interactively.' . PHP_EOL . 'Run composer setup in an interactive terminal to finish setup.' . PHP_EOL); exit(0); } passthru(escapeshellarg(PHP_BINARY) . ' artisan boost:install --ansi', \\$exitCode); exit(\\$exitCode);\""
+        ],
         "setup": [
             "@composer install --no-interaction --prefer-dist @no_additional_args",
             "@prepare-environment",
+            "@install-boost",
             "npm ci @no_additional_args",
             "npx playwright install chromium @no_additional_args",
             "npm run build @no_additional_args"
@@ -85,7 +89,7 @@
             "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1 --timeout=0\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"
         ],
         "test": [
-            "@php artisan test --parallel --compact"
+            "@php artisan test --ci --parallel --compact"
         ],
         "verify": [
             "@php vendor/bin/pint --test --format agent",
@@ -99,18 +103,15 @@
         ],
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force",
-            "@php artisan boost:update --ansi"
+            "@php -r \"if (file_exists('boost.json')) { passthru(escapeshellarg(PHP_BINARY) . ' artisan boost:update --ansi', \\$exitCode); exit(\\$exitCode); }\""
         ],
         "post-root-package-install": [
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
         ],
         "post-create-project-cmd": [
-            "@prepare-environment",
             "@composer update shipwelldev/cornerstone-support --no-interaction @no_additional_args",
             "@php artisan cornerstone:stubs --ansi --no-interaction @no_additional_args",
-            "npm ci @no_additional_args",
-            "npx playwright install chromium @no_additional_args",
-            "npm run build @no_additional_args"
+            "@setup @no_additional_args"
         ],
         "pre-package-uninstall": [
             "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
