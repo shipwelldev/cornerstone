@@ -57,13 +57,23 @@ jobs:
       - name: Generate app key
         run: php artisan key:generate
 
-      - name: Verify application
+      - name: Check formatting
+        run: php vendor/bin/pint --test --format agent
+
+      - name: Analyse application
+        run: composer analyse
+
+      - name: Test application
         shell: bash
         run: |
           set +e
-          setsid composer verify &
-          verify_pid=$!
-          wait "$verify_pid"
+          # Work around https://github.com/pestphp/pest/issues/1754.
+          setsid php artisan test --ci --parallel --compact &
+          test_pid=$!
+          wait "$test_pid"
           status=$?
-          kill -- "-$verify_pid" 2>/dev/null || true
+          kill -- "-$test_pid" 2>/dev/null || true
           exit "$status"
+
+      - name: Build assets
+        run: composer build
