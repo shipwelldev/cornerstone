@@ -32,7 +32,15 @@ jobs:
       - name: Create project non-interactively
         env:
           COMPOSER_NO_INTERACTION: '1'
-        run: composer create-project shipwelldev/cornerstone smoke-app "${{ inputs.package_version }}" --prefer-dist --no-interaction --no-progress
+          PACKAGE_VERSION: ${{ inputs.package_version }}
+        shell: bash
+        run: |
+          if [[ ! "$PACKAGE_VERSION" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            printf 'Invalid package version: %s\n' "$PACKAGE_VERSION" >&2
+            exit 1
+          fi
+
+          composer create-project shipwelldev/cornerstone smoke-app "$PACKAGE_VERSION" --prefer-dist --no-interaction --no-progress
 
       - name: Verify project creation
         working-directory: smoke-app
