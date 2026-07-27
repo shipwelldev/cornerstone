@@ -28,6 +28,11 @@ Create a new project from the published Composer package:
 
 ```shell
 composer create-project --prefer-dist shipwelldev/cornerstone your-app
+```
+
+Then enter the new application directory:
+
+```shell
 cd your-app
 ```
 
