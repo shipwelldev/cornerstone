@@ -58,4 +58,12 @@ jobs:
         run: php artisan key:generate
 
       - name: Verify application
-        run: composer verify
+        shell: bash
+        run: |
+          set +e
+          setsid composer verify &
+          verify_pid=$!
+          wait "$verify_pid"
+          status=$?
+          kill -- "-$verify_pid" 2>/dev/null || true
+          exit "$status"
