@@ -63,6 +63,9 @@ jobs:
       - name: Analyse application
         run: composer analyse
 
+      - name: Build assets
+        run: composer build
+
       - name: Test application
         run: php artisan test --ci --parallel --compact --exclude-testsuite=Browser
 
@@ -78,6 +81,3 @@ jobs:
           kill -- "-$test_pid" 2>/dev/null || true
           cat "$RUNNER_TEMP/pest-browser.log"
           exit "$status"
-
-      - name: Build assets
-        run: composer build
