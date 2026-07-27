@@ -25,7 +25,8 @@
         "laravel/framework": "^13.20",
         "laravel/tinker": "^3.0",
         "livewire/livewire": "^4.3",
-        "php": "~8.4.0 || ~8.5.0"
+        "php": "~8.4.0 || ~8.5.0",
+        "shipwelldev/cornerstone-support": "^0.1"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -105,6 +106,8 @@
         ],
         "post-create-project-cmd": [
             "@prepare-environment",
+            "@composer update shipwelldev/cornerstone-support --no-interaction @no_additional_args",
+            "@php artisan cornerstone:stubs --ansi --no-interaction @no_additional_args",
             "npm ci @no_additional_args",
             "npx playwright install chromium @no_additional_args",
             "npm run build @no_additional_args"

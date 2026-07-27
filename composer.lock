@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5e3dea8ea25fa2fd4232cb1315328d85",
+    "content-hash": "a2b50503bb2c08158b569ae2a2592e69",
     "packages": [
         {
             "name": "brick/math",
@@ -3439,6 +3439,78 @@
                 "source": "https://github.com/ramsey/uuid/tree/4.9.3"
             },
             "time": "2026-06-18T03:57:49+00:00"
+        },
+        {
+            "name": "shipwelldev/cornerstone-support",
+            "version": "v0.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/shipwelldev/cornerstone-support.git",
+                "reference": "3f641304e89f196ac510b0302584bf8b2eed0080"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/shipwelldev/cornerstone-support/zipball/3f641304e89f196ac510b0302584bf8b2eed0080",
+                "reference": "3f641304e89f196ac510b0302584bf8b2eed0080",
+                "shasum": ""
+            },
+            "require": {
+                "laravel/framework": "^13.20",
+                "livewire/livewire": "^4.3",
+                "php": "~8.4.0 || ~8.5.0"
+            },
+            "require-dev": {
+                "larastan/larastan": "^3.0",
+                "laravel/boost": "^2.4",
+                "laravel/pint": "^1.27",
+                "orchestra/testbench": "^11.0",
+                "pestphp/pest": "^4.7",
+                "pestphp/pest-plugin-browser": "^4.3",
+                "pestphp/pest-plugin-laravel": "^4.1"
+            },
+            "suggest": {
+                "laravel/boost": "Required to discover and publish the package's agent guidelines and skills.",
+                "pestphp/pest": "Required to generate and run Pest tests.",
+                "pestphp/pest-plugin-browser": "Required to generate and run Pest browser tests.",
+                "pestphp/pest-plugin-laravel": "Required to run Pest tests in Laravel applications."
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "ShipWell\\CornerstoneSupport\\CornerstoneSupportServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "ShipWell\\CornerstoneSupport\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Ship Well Development",
+                    "homepage": "https://shipwell.dev"
+                }
+            ],
+            "description": "Evolving generators, stubs, standards, and installation guidance for Cornerstone Laravel applications.",
+            "homepage": "https://github.com/shipwelldev/cornerstone-support",
+            "keywords": [
+                "code-generation",
+                "developer-tools",
+                "laravel",
+                "livewire",
+                "starter-kit"
+            ],
+            "support": {
+                "issues": "https://github.com/shipwelldev/cornerstone-support/issues",
+                "source": "https://github.com/shipwelldev/cornerstone-support"
+            },
+            "time": "2026-07-27T00:25:38+00:00"
         },
         {
             "name": "symfony/clock",
