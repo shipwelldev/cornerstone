@@ -101,7 +101,7 @@
                                 <select
                                     id="destination"
                                     name="destination"
-                                    wire:model.live.blur="destination"
+                                    wire:model.live.change="destination"
                                     @error('destination') aria-describedby="destination-error" @enderror
                                     aria-invalid="{{ $errors->has('destination') ? 'true' : 'false' }}"
                                     class="mt-2 block w-full rounded-xl border border-white/10 bg-stone-950/70 px-4 py-3 text-sm text-white focus:border-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-300/20"
@@ -123,7 +123,7 @@
                                 <select
                                     id="mission-purpose"
                                     name="missionPurpose"
-                                    wire:model.live.blur="missionPurpose"
+                                    wire:model.live.change="missionPurpose"
                                     @error('missionPurpose') aria-describedby="mission-purpose-error" @enderror
                                     aria-invalid="{{ $errors->has('missionPurpose') ? 'true' : 'false' }}"
                                     class="mt-2 block w-full rounded-xl border border-white/10 bg-stone-950/70 px-4 py-3 text-sm text-white focus:border-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-300/20"
