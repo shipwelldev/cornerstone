@@ -1,6 +1,21 @@
 # Release Notes
 
-## [Unreleased](https://github.com/shipwelldev/cornerstone/compare/v0.1.0...main)
+## [Unreleased](https://github.com/shipwelldev/cornerstone/compare/v0.3.0...main)
+
+## [v0.3.0](https://github.com/shipwelldev/cornerstone/releases/tag/v0.3.0) - 2026-07-28
+
+* Upgrade generated applications to Pest 5 and PHPUnit 13, including Pest Browser and Laravel plugin compatibility.
+* Add Pest Agent verification and Pest-aware PHPStan analysis for application tests at level 10.
+* Publish Pest Agent guidance through optional Boost setup and verify generated application tooling during release smoke tests.
+* Improve project setup lifecycle separation, font loading, dependency automation, and GitHub Actions versions.
+
+**Full Changelog**: https://github.com/shipwelldev/cornerstone/compare/v0.2.0...v0.3.0
+
+## [v0.2.0](https://github.com/shipwelldev/cornerstone/releases/tag/v0.2.0) - 2026-07-27
+
+* Prepare the project creation, setup, export, and release workflows for the first Packagist-distributed Cornerstone applications.
+
+**Full Changelog**: https://github.com/shipwelldev/cornerstone/compare/v0.1.0...v0.2.0
 
 ## [v0.1.0](https://github.com/shipwelldev/cornerstone/releases/tag/v0.1.0) - 2026-07-27
 
