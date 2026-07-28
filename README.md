@@ -8,7 +8,7 @@ Cornerstone is [available on Packagist](https://packagist.org/packages/shipwelld
 
 - Laravel 13 and Livewire 4
 - Tailwind CSS 4 and Vite
-- Pest 4 unit, feature, architecture, and browser testing
+- Pest 5 unit, feature, architecture, and browser testing
 - Larastan static analysis and Laravel Pint formatting
 - Laravel Boost integration for supported coding agents
 - Opinionated generators, published stubs, and coding standards from `cornerstone-support`
@@ -16,7 +16,7 @@ Cornerstone is [available on Packagist](https://packagist.org/packages/shipwelld
 
 ## Requirements
 
-- PHP `~8.4.0 || ~8.5.0` with the extensions required by `composer.json` and the PDO driver for your selected database
+- PHP `~8.4.1 || ~8.5.0` with the extensions required by `composer.json` and the PDO driver for your selected database
 - Composer `>=2.9 <3.0`
 - Node.js `22.12+` or `24`, with its bundled npm; npm is the only supported JavaScript package manager
 - A supported database: SQLite 3.26+; MySQL 8.4 or 9.7 LTS; MariaDB 10.11, 11.4, 11.8, or 12.3 LTS; PostgreSQL 14 through 18; or SQL Server 2022 or 2025 with current patches

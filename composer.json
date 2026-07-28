@@ -25,7 +25,7 @@
         "laravel/framework": "^13.20",
         "laravel/tinker": "^3.0",
         "livewire/livewire": "^4.3",
-        "php": "~8.4.0 || ~8.5.0",
+        "php": "~8.4.1 || ~8.5.0",
         "shipwelldev/cornerstone-support": "^0.1"
     },
     "require-dev": {
@@ -37,9 +37,11 @@
         "laravel/pint": "^1.27",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.6",
-        "pestphp/pest": "^4.7",
-        "pestphp/pest-plugin-browser": "^4.3",
-        "pestphp/pest-plugin-laravel": "^4.1"
+        "pestphp/pest": "^5.0",
+        "pestphp/pest-plugin-agent": "^5.0",
+        "pestphp/pest-plugin-browser": "^5.0",
+        "pestphp/pest-plugin-laravel": "^5.0",
+        "pestphp/pest-plugin-phpstan": "^5.0"
     },
     "autoload": {
         "psr-4": {
@@ -59,6 +61,9 @@
         ],
         "build": [
             "npm run build"
+        ],
+        "configure-boost": [
+            "@php -r \"if (! file_exists('boost.json')) { exit(0); } \\$config = json_decode(file_get_contents('boost.json'), true); if (! is_array(\\$config)) { fwrite(STDERR, 'Unable to configure Boost because boost.json is invalid.' . PHP_EOL); exit(1); } foreach (['packages' => 'pestphp/pest-plugin-agent', 'skills' => 'pest-plugin-agent'] as \\$key => \\$value) { \\$values = \\$config[\\$key] ?? []; if (! is_array(\\$values)) { fwrite(STDERR, 'Unable to configure Boost because [' . \\$key . '] is invalid.' . PHP_EOL); exit(1); } \\$values[] = \\$value; \\$config[\\$key] = array_values(array_unique(\\$values)); } ksort(\\$config); if (file_put_contents('boost.json', json_encode(\\$config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL) === false) { fwrite(STDERR, 'Unable to write boost.json.' . PHP_EOL); exit(1); } putenv('PARATEST=1'); passthru(escapeshellarg(PHP_BINARY) . ' artisan boost:update --ansi --no-interaction', \\$exitCode); exit(\\$exitCode);\""
         ],
         "fix": [
             "@php vendor/bin/pint --format agent"
@@ -80,6 +85,7 @@
             "@composer install --no-interaction --prefer-dist @no_additional_args",
             "@prepare-environment",
             "@install-boost",
+            "@configure-boost",
             "npm ci @no_additional_args",
             "npx playwright install chromium @no_additional_args",
             "npm run build @no_additional_args"
@@ -103,7 +109,7 @@
         ],
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force",
-            "@php -r \"if (file_exists('boost.json')) { passthru(escapeshellarg(PHP_BINARY) . ' artisan boost:update --ansi', \\$exitCode); exit(\\$exitCode); }\""
+            "@php -r \"if (file_exists('boost.json')) { putenv('PARATEST=1'); passthru(escapeshellarg(PHP_BINARY) . ' artisan boost:update --ansi', \\$exitCode); exit(\\$exitCode); }\""
         ],
         "post-root-package-install": [
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
