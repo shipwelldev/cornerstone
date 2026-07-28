@@ -60,6 +60,10 @@ composer setup
 
 Setup is safe to repeat. It installs from the Composer and npm lockfiles, preserves an existing `.env` and application key, configures Boost when an interactive terminal is available and `boost.json` does not exist, installs Playwright Chromium, and builds production assets. It does not initialize or migrate the database.
 
+## Enable dependency security updates
+
+Cornerstone configures Dependabot to check Composer, npm, and GitHub Actions dependencies weekly. To receive security update pull requests in a private repository, enable the dependency graph, Dependabot alerts, and Dependabot security updates under **Settings > Advanced Security**. Public repositories generally have these features enabled automatically.
+
 ## Configure the database
 
 Choose the database explicitly before running the application.
