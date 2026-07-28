@@ -25,12 +25,22 @@ function applicationClassesIn(string $relativeDirectory = ''): array
     );
 
     foreach ($files as $file) {
+        if ( ! $file instanceof SplFileInfo) {
+            continue;
+        }
+
         if ( ! $file->isFile() || $file->getExtension() !== 'php') {
             continue;
         }
 
         $relativePath = mb_substr($file->getPathname(), mb_strlen($appDirectory), -4);
-        $classes[] = 'App\\' . str_replace(DIRECTORY_SEPARATOR, '\\', $relativePath);
+        $class = 'App\\' . str_replace(DIRECTORY_SEPARATOR, '\\', $relativePath);
+
+        if ( ! class_exists($class)) {
+            throw new RuntimeException("Application class [{$class}] could not be loaded.");
+        }
+
+        $classes[] = $class;
     }
 
     sort($classes);
@@ -47,6 +57,10 @@ function bladeViewFiles(): array
     );
 
     foreach ($files as $file) {
+        if ( ! $file instanceof SplFileInfo) {
+            continue;
+        }
+
         if ($file->isFile() && str_ends_with($file->getFilename(), '.blade.php')) {
             $views[] = $file->getPathname();
         }
@@ -55,6 +69,17 @@ function bladeViewFiles(): array
     sort($views);
 
     return $views;
+}
+
+function readArchitectureFile(string $path): string
+{
+    $contents = file_get_contents($path);
+
+    if ($contents === false) {
+        throw new RuntimeException("Unable to read architecture fixture [{$path}].");
+    }
+
+    return $contents;
 }
 
 arch('application classes match their paths and casing')
@@ -116,6 +141,10 @@ arch('application tests use Pest rather than PHPUnit classes')
 
 test('models declare mass-assignment metadata', function (): void {
     foreach (applicationClassesIn('Models') as $model) {
+        if ( ! is_string($model) || ! class_exists($model)) {
+            throw new RuntimeException('Model architecture checks require loadable class names.');
+        }
+
         $reflection = new ReflectionClass($model);
         $attributes = [
             ...$reflection->getAttributes(Fillable::class),
@@ -123,7 +152,7 @@ test('models declare mass-assignment metadata', function (): void {
             ...$reflection->getAttributes(Unguarded::class),
         ];
 
-        expect($attributes, $model)->not->toBeEmpty();
+        expect($attributes)->not->toBeEmpty($model);
     }
 });
 
@@ -137,6 +166,10 @@ test('data properties are typed and promoted', function (): void {
     }
 
     foreach ($dataClasses as $data) {
+        if ( ! is_string($data) || ! class_exists($data)) {
+            throw new RuntimeException('Data architecture checks require loadable class names.');
+        }
+
         $reflection = new ReflectionClass($data);
 
         foreach ($reflection->getProperties() as $property) {
@@ -146,21 +179,25 @@ test('data properties are typed and promoted', function (): void {
 
             $propertyName = $property->getName();
 
-            expect($property->hasType(), "{$data}::\${$propertyName}")->toBeTrue()
-                ->and($property->isPromoted(), "{$data}::\${$propertyName}")->toBeTrue();
+            expect($property->hasType())->toBeTrue("{$data}::\${$propertyName}")
+                ->and($property->isPromoted())->toBeTrue("{$data}::\${$propertyName}");
         }
     }
 });
 
 test('Livewire public properties have native types', function (): void {
     foreach (applicationClassesIn('Livewire') as $component) {
+        if ( ! is_string($component) || ! class_exists($component)) {
+            throw new RuntimeException('Livewire architecture checks require loadable class names.');
+        }
+
         $reflection = new ReflectionClass($component);
 
         foreach ($reflection->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {
             if ($property->getDeclaringClass()->getName() === $component) {
                 $propertyName = $property->getName();
 
-                expect($property->hasType(), "{$component}::\${$propertyName}")->toBeTrue();
+                expect($property->hasType())->toBeTrue("{$component}::\${$propertyName}");
             }
         }
     }
@@ -168,14 +205,18 @@ test('Livewire public properties have native types', function (): void {
 
 test('application methods use camelCase names', function (): void {
     foreach (applicationClassesIn() as $class) {
+        if ( ! is_string($class) || ! class_exists($class)) {
+            throw new RuntimeException('Method architecture checks require loadable class names.');
+        }
+
         $reflection = new ReflectionClass($class);
 
         foreach ($reflection->getMethods() as $method) {
             if ($method->getDeclaringClass()->getName() === $class && ! str_starts_with($method->getName(), '__')) {
                 $methodName = $method->getName();
 
-                expect($methodName, "{$class}::{$methodName}")
-                    ->toMatch('/^[a-z][A-Za-z0-9]*$/');
+                expect($methodName)
+                    ->toMatch('/^[a-z][A-Za-z0-9]*$/', "{$class}::{$methodName}");
             }
         }
     }
@@ -183,7 +224,11 @@ test('application methods use camelCase names', function (): void {
 
 test('Blade views use kebab-case filenames and contain no raw PHP', function (): void {
     foreach (bladeViewFiles() as $view) {
-        expect(basename($view), $view)->toMatch('/^[a-z0-9]+(?:-[a-z0-9]+)*\.blade\.php$/')
-            ->and(file_get_contents($view), $view)->not->toMatch('/@php\b|<\?(?:php|=)?/i');
+        if ( ! is_string($view)) {
+            throw new RuntimeException('Blade architecture checks require string paths.');
+        }
+
+        expect(basename($view))->toMatch('/^[a-z0-9]+(?:-[a-z0-9]+)*\.blade\.php$/', $view)
+            ->and(readArchitectureFile($view))->not->toMatch('/@php\b|<\?(?:php|=)?/i', $view);
     }
 });

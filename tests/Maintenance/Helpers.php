@@ -12,6 +12,10 @@ function removeTemporaryDirectory(string $directory): void
     );
 
     foreach ($files as $file) {
+        if ( ! $file instanceof SplFileInfo) {
+            continue;
+        }
+
         if ($file->isDir() && ! $file->isLink()) {
             rmdir($file->getPathname());
         } else {

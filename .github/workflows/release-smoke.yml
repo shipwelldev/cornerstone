@@ -83,3 +83,10 @@ jobs:
           grep -Fq '// release smoke sentinel' stubs/data.stub
           test -s public/build/manifest.json
           test ! -e database/database.sqlite
+
+      - name: Verify generated application tooling
+        working-directory: smoke-app
+        run: |
+          composer analyse
+          php artisan test --ci --compact --exclude-testsuite=Browser
+          vendor/bin/pest --agent='$this->get("/")->assertOk();'

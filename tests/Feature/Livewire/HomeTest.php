@@ -20,7 +20,9 @@ test('the mission brief starts empty', function (): void {
 });
 
 test('the mission brief is validated before planning', function (string $property, mixed $value, string $rule): void {
-    Livewire::test(Home::class)
+    $component = Livewire::test(Home::class);
+
+    $component
         ->set('callSign', 'Aurora Seven')
         ->set('destination', 'glass-nebula')
         ->set('crewSize', 4)
@@ -28,8 +30,9 @@ test('the mission brief is validated before planning', function (string $propert
         ->set('missionPurpose', 'research')
         ->set($property, $value)
         ->call('planExpedition')
-        ->assertHasErrors([$property => $rule])
-        ->assertSet('hasPlan', false);
+        ->assertHasErrors([$property => $rule]);
+
+    $component->assertSet('hasPlan', false);
 })->with([
     'call sign is required' => ['callSign', '', 'required'],
     'call sign has a minimum length' => ['callSign', 'AB', 'min'],
@@ -40,16 +43,22 @@ test('the mission brief is validated before planning', function (string $propert
 ]);
 
 test('a valid mission brief produces an expedition plan', function (): void {
-    Livewire::test(Home::class)
+    $component = Livewire::test(Home::class);
+
+    $component
         ->set('callSign', 'Aurora Seven')
         ->set('destination', 'glass-nebula')
         ->set('crewSize', 4)
         ->set('durationInDays', 45)
         ->set('missionPurpose', 'research')
         ->call('planExpedition')
-        ->assertHasNoErrors()
+        ->assertHasNoErrors();
+
+    $component
         ->assertSet('hasPlan', true)
-        ->assertDispatched('expedition-planned')
+        ->assertDispatched('expedition-planned');
+
+    $component
         ->assertSee('Aurora Seven')
         ->assertSee('Elevated risk')
         ->assertSee('180')
@@ -58,7 +67,9 @@ test('a valid mission brief produces an expedition plan', function (): void {
 });
 
 test('the mission brief can be revised without losing its values', function (): void {
-    Livewire::test(Home::class)
+    $component = Livewire::test(Home::class);
+
+    $component
         ->set('callSign', 'Aurora Seven')
         ->set('destination', 'glass-nebula')
         ->set('crewSize', 4)
@@ -72,8 +83,9 @@ test('the mission brief can be revised without losing its values', function (): 
         ->assertSet('crewSize', 4)
         ->assertSet('durationInDays', 45)
         ->assertSet('missionPurpose', 'research')
-        ->assertDispatched('mission-brief-revised')
-        ->assertSee('Define the expedition');
+        ->assertDispatched('mission-brief-revised');
+
+    $component->assertSee('Define the expedition');
 });
 
 test('the mission brief can be reset', function (): void {

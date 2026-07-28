@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Data\ExpeditionPlanData;
 use App\Enums\Destination;
 use App\Enums\MissionPurpose;
 use App\Services\ExpeditionPlanningService;
@@ -24,18 +23,16 @@ test('it plans deterministic expeditions', function (
         missionPurpose: $missionPurpose,
     );
 
-    expect($expeditionPlan)
-        ->toBeInstanceOf(ExpeditionPlanData::class)
-        ->callSign->toBe('Aurora Seven')
-        ->destination->toBe($destination)
-        ->missionPurpose->toBe($missionPurpose)
-        ->riskClassification->toBe($expectedRisk)
-        ->rationPacks->toBe($expectedRationPacks)
-        ->waterLiters->toBe($expectedWaterLiters)
-        ->navigationRecommendation->not->toBeEmpty()
-        ->survivalRecommendation->not->toBeEmpty()
-        ->missionSpecialistRecommendation->not->toBeEmpty()
-        ->advisory->not->toBeEmpty();
+    expect($expeditionPlan->callSign)->toBe('Aurora Seven');
+    expect($expeditionPlan->destination)->toBe($destination);
+    expect($expeditionPlan->missionPurpose)->toBe($missionPurpose);
+    expect($expeditionPlan->riskClassification)->toBe($expectedRisk);
+    expect($expeditionPlan->rationPacks)->toBe($expectedRationPacks);
+    expect($expeditionPlan->waterLiters)->toBe($expectedWaterLiters);
+    expect($expeditionPlan->navigationRecommendation)->not->toBeEmpty();
+    expect($expeditionPlan->survivalRecommendation)->not->toBeEmpty();
+    expect($expeditionPlan->missionSpecialistRecommendation)->not->toBeEmpty();
+    expect($expeditionPlan->advisory)->not->toBeEmpty();
 })->with([
     'routine survey' => [Destination::EmberMoon, MissionPurpose::Survey, 2, 10, 'Routine', 20, 60],
     'elevated research mission' => [Destination::GlassNebula, MissionPurpose::Research, 4, 45, 'Elevated', 180, 540],

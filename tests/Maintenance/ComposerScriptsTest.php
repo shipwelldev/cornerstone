@@ -6,14 +6,51 @@ use Symfony\Component\Process\Process;
 
 function composerScript(string $name): array
 {
-    $composer = json_decode(file_get_contents(dirname(__DIR__, 2) . '/composer.json'), true, flags: JSON_THROW_ON_ERROR);
+    $contents = file_get_contents(dirname(__DIR__, 2) . '/composer.json');
 
-    return $composer['scripts'][$name];
+    if ($contents === false) {
+        throw new RuntimeException('Unable to read composer.json.');
+    }
+
+    $composer = json_decode($contents, true, flags: JSON_THROW_ON_ERROR);
+    $scripts = is_array($composer) ? ($composer['scripts'] ?? null) : null;
+    $commands = is_array($scripts) ? ($scripts[$name] ?? null) : null;
+
+    if ( ! is_array($commands) || $commands === []) {
+        throw new RuntimeException("Composer script [{$name}] is missing or empty.");
+    }
+
+    $validatedCommands = [];
+
+    foreach ($commands as $command) {
+        if ( ! is_string($command)) {
+            throw new RuntimeException("Composer script [{$name}] contains a non-string command.");
+        }
+
+        $validatedCommands[] = $command;
+    }
+
+    return $validatedCommands;
 }
 
-function runComposerScript(string $name, string $workingDirectory, array $environment = []): Process
+function runComposerScript(string $name, string $workingDirectory, bool $nonInteractive = false, ?string $fakeArtisanExitCode = null): Process
 {
+    $process = null;
+    $environment = [];
+
+    if ($nonInteractive) {
+        $environment['COMPOSER_NO_INTERACTION'] = '1';
+    }
+
+    if ($fakeArtisanExitCode !== null) {
+        $environment['FAKE_ARTISAN_EXIT_CODE'] = $fakeArtisanExitCode;
+    }
+
     foreach (composerScript($name) as $script) {
+        if ( ! is_string($script)) {
+            throw new RuntimeException("Composer script [{$name}] contains a non-string command.");
+        }
+
         $command = preg_replace('/^@php\s+/', escapeshellarg(PHP_BINARY) . ' ', $script);
 
         if ($command === null) {
@@ -28,15 +65,26 @@ function runComposerScript(string $name, string $workingDirectory, array $enviro
         }
     }
 
+    if ( ! $process instanceof Process) {
+        throw new RuntimeException("Composer script [{$name}] did not contain any commands.");
+    }
+
     return $process;
 }
 
-function runComposerScriptCommandContaining(string $name, string $fragment, string $workingDirectory, array $environment = []): Process
+function runComposerScriptCommandContaining(string $name, string $fragment, string $workingDirectory, ?string $fakeArtisanExitCode = null): Process
 {
-    $matchingScripts = array_values(array_filter(
-        composerScript($name),
-        fn (string $script): bool => str_contains($script, $fragment),
-    ));
+    $matchingScripts = [];
+
+    foreach (composerScript($name) as $script) {
+        if ( ! is_string($script)) {
+            throw new RuntimeException("Composer script [{$name}] contains a non-string command.");
+        }
+
+        if (str_contains($script, $fragment)) {
+            $matchingScripts[] = $script;
+        }
+    }
 
     if (count($matchingScripts) !== 1) {
         throw new RuntimeException(
@@ -51,6 +99,7 @@ function runComposerScriptCommandContaining(string $name, string $fragment, stri
         throw new RuntimeException("Unable to prepare Composer script [{$name}].");
     }
 
+    $environment = $fakeArtisanExitCode === null ? [] : ['FAKE_ARTISAN_EXIT_CODE' => $fakeArtisanExitCode];
     $process = Process::fromShellCommandline($commandLine, $workingDirectory, $environment);
     $process->run();
 
@@ -64,6 +113,10 @@ function writeFakeArtisan(string $workingDirectory): void
 
 $arguments = array_slice($argv, 1);
 file_put_contents(__DIR__.'/artisan-invocations', implode(' ', $arguments).PHP_EOL, FILE_APPEND);
+
+if (getenv('PARATEST') !== false) {
+    file_put_contents(__DIR__.'/paratest-environment', getenv('PARATEST'));
+}
 
 $configuredExitCode = getenv('FAKE_ARTISAN_EXIT_CODE');
 $exitCode = $configuredExitCode === false ? 0 : (int) $configuredExitCode;
@@ -99,9 +152,7 @@ test('post-update skips Boost successfully when Boost is not configured', functi
     withComposerFixture(function (string $workingDirectory): void {
         writeFakeArtisan($workingDirectory);
 
-        $process = runComposerScriptCommandContaining('post-update-cmd', fragment: 'boost:update', workingDirectory: $workingDirectory, environment: [
-            'FAKE_ARTISAN_EXIT_CODE' => '23',
-        ]);
+        $process = runComposerScriptCommandContaining('post-update-cmd', fragment: 'boost:update', workingDirectory: $workingDirectory, fakeArtisanExitCode: '23');
 
         expect($process->isSuccessful())->toBeTrue($process->getErrorOutput())
             ->and(file_exists($workingDirectory . '/artisan-invocations'))->toBeFalse();
@@ -113,12 +164,11 @@ test('post-update runs Boost whenever its configuration exists and propagates it
         writeFakeArtisan($workingDirectory);
         file_put_contents($workingDirectory . '/boost.json', 'not valid json');
 
-        $process = runComposerScriptCommandContaining('post-update-cmd', fragment: 'boost:update', workingDirectory: $workingDirectory, environment: [
-            'FAKE_ARTISAN_EXIT_CODE' => '23',
-        ]);
+        $process = runComposerScriptCommandContaining('post-update-cmd', fragment: 'boost:update', workingDirectory: $workingDirectory, fakeArtisanExitCode: '23');
 
         expect($process->getExitCode())->toBe(23)
-            ->and(file_get_contents($workingDirectory . '/artisan-invocations'))->toBe("boost:update --ansi\n");
+            ->and(file_get_contents($workingDirectory . '/artisan-invocations'))->toBe("boost:update --ansi\n")
+            ->and(file_get_contents($workingDirectory . '/paratest-environment'))->toBe('1');
     });
 });
 
@@ -140,9 +190,7 @@ test('install-boost skips with instructions under non-interactive input', functi
     withComposerFixture(function (string $workingDirectory): void {
         writeFakeArtisan($workingDirectory);
 
-        $process = runComposerScript('install-boost', $workingDirectory, [
-            'COMPOSER_NO_INTERACTION' => '1',
-        ]);
+        $process = runComposerScript('install-boost', $workingDirectory, nonInteractive: true);
 
         expect($process->isSuccessful())->toBeTrue($process->getErrorOutput())
             ->and($process->getOutput())->toContain('Boost setup was skipped')
@@ -156,14 +204,77 @@ test('install-boost short-circuits silently when Boost is already configured', f
         writeFakeArtisan($workingDirectory);
         file_put_contents($workingDirectory . '/boost.json', '{}');
 
-        $process = runComposerScript('install-boost', $workingDirectory, [
-            'COMPOSER_NO_INTERACTION' => '1',
-        ]);
+        $process = runComposerScript('install-boost', $workingDirectory, nonInteractive: true);
 
         expect($process->isSuccessful())->toBeTrue($process->getErrorOutput())
             ->and($process->getOutput())->toBe('')
             ->and($process->getErrorOutput())->toBe('')
             ->and(file_exists($workingDirectory . '/artisan-invocations'))->toBeFalse();
+    });
+});
+
+test('configure-boost enables Pest Agent guidance in existing Boost configuration', function (): void {
+    withComposerFixture(function (string $workingDirectory): void {
+        writeFakeArtisan($workingDirectory);
+        file_put_contents($workingDirectory . '/boost.json', json_encode([
+            'agents' => ['opencode'],
+            'packages' => ['example/package'],
+            'skills' => ['pest-testing'],
+        ], JSON_THROW_ON_ERROR));
+
+        $process = runComposerScript('configure-boost', $workingDirectory);
+        $contents = file_get_contents($workingDirectory . '/boost.json');
+
+        if ($contents === false) {
+            throw new RuntimeException('Unable to read configured Boost fixture.');
+        }
+
+        $config = json_decode($contents, true, flags: JSON_THROW_ON_ERROR);
+
+        expect($process->isSuccessful())->toBeTrue($process->getErrorOutput())
+            ->and($config)->toMatchArray([
+                'agents' => ['opencode'],
+                'packages' => ['example/package', 'pestphp/pest-plugin-agent'],
+                'skills' => ['pest-testing', 'pest-plugin-agent'],
+            ])
+            ->and(file_get_contents($workingDirectory . '/artisan-invocations'))->toBe("boost:update --ansi --no-interaction\n")
+            ->and(file_get_contents($workingDirectory . '/paratest-environment'))->toBe('1');
+    });
+});
+
+test('configure-boost skips successfully when Boost is not configured', function (): void {
+    withComposerFixture(function (string $workingDirectory): void {
+        writeFakeArtisan($workingDirectory);
+
+        $process = runComposerScript('configure-boost', $workingDirectory);
+
+        expect($process->isSuccessful())->toBeTrue($process->getErrorOutput())
+            ->and(file_exists($workingDirectory . '/artisan-invocations'))->toBeFalse();
+    });
+});
+
+test('configure-boost fails clearly when Boost configuration is invalid', function (): void {
+    withComposerFixture(function (string $workingDirectory): void {
+        writeFakeArtisan($workingDirectory);
+        file_put_contents($workingDirectory . '/boost.json', 'not valid json');
+
+        $process = runComposerScript('configure-boost', $workingDirectory);
+
+        expect($process->isSuccessful())->toBeFalse()
+            ->and($process->getErrorOutput())->toContain('boost.json is invalid')
+            ->and(file_exists($workingDirectory . '/artisan-invocations'))->toBeFalse();
+    });
+});
+
+test('configure-boost propagates Boost update failures', function (): void {
+    withComposerFixture(function (string $workingDirectory): void {
+        writeFakeArtisan($workingDirectory);
+        file_put_contents($workingDirectory . '/boost.json', '{}');
+
+        $process = runComposerScript('configure-boost', $workingDirectory, fakeArtisanExitCode: '23');
+
+        expect($process->getExitCode())->toBe(23)
+            ->and(file_get_contents($workingDirectory . '/artisan-invocations'))->toBe("boost:update --ansi --no-interaction\n");
     });
 });
 
