@@ -53,6 +53,7 @@ test('release archives contain application files and exclude repository maintena
             'tests/Feature/HomePageTest.php',
             'tests/Unit/ArchitectureTest.php',
             '.ai/skills/remove-example/SKILL.md',
+            '.github/dependabot.yml',
             '.github/workflows/tests.yml',
         ];
 
