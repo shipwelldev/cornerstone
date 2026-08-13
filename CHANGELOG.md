@@ -1,6 +1,14 @@
 # Release Notes
 
-## [Unreleased](https://github.com/shipwelldev/cornerstone/compare/v0.3.0...main)
+## [Unreleased](https://github.com/shipwelldev/cornerstone/compare/v0.4.0...main)
+
+## [v0.4.0](https://github.com/shipwelldev/cornerstone/releases/tag/v0.4.0) - 2026-08-12
+
+* Upgrade Cornerstone support to 0.2 for generated applications.
+* Update Playwright, Vite, Pest, and Laravel Pint to their latest compatible releases.
+* Expand the coding standards with overarching principles for YAGNI, clarity, descriptive naming, explicit code, and behavior-focused tests.
+
+**Full Changelog**: https://github.com/shipwelldev/cornerstone/compare/v0.3.0...v0.4.0
 
 ## [v0.3.0](https://github.com/shipwelldev/cornerstone/releases/tag/v0.3.0) - 2026-07-28
 
