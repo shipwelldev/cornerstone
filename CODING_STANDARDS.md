@@ -2,6 +2,15 @@
 
 This is the single coding standard for Cornerstone maintenance and every generated application. The words Rule, Guideline, and Recommendation have the meanings below; they are not interchangeable.
 
+## Prinicpals
+
+To begin there are some basic overarching prinicpals that you chould keep in mind when wirting code for this project:
+
+- YAGNI "You ain't gonna need it" is your friend. That means: Implement things when you actually need them, never when you just foresee that you need them.
+- Prefer simple clear and obvious code over clever "shortcuts". Assume a novice may need to read and understand what the code does.
+- Class/Method/Variable names matter. Verbosity is prefered over short vauge names that don't convey what it is or what it does.
+- Prefer explicit code over implicit code. Don't assume something is clear, make it clear.
+
 ## Authority and precedence
 
 Rules are mandatory. Guidelines are expected and may be overridden only by an explicit human decision. Recommendations are preferred; an agent may depart from one when context clearly favors another approach if it discloses the departure and rationale.
@@ -68,6 +77,7 @@ A human-approved exception changes neither the Rule nor its default enforcement.
 - Every Livewire component has a direct component test in addition to any route or browser coverage.
 - Test names describe behavior. Avoid tautologies, implementation-coupled mocks, broad snapshots, weak source-text proxies, and assertions that merely restate configuration.
 - Tests contain no unowned skips or placeholders. TODO and FIXME comments are issue-linked.
+- Tests validate functionality not presentation. Don't be aserting that you see specific strings, assert the correct outcome occurs when an action is taken.
 
 ## Guidelines
 
