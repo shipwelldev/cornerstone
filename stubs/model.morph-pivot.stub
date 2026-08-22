@@ -1,0 +1,19 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+{{ factoryImport }}
+use Glhd\Bits\Database\HasSnowflakes;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+{{ factoryTraitImport }}
+use Illuminate\Database\Eloquent\Relations\MorphPivot;
+
+#[Fillable([])]
+{{ factoryAttribute }}
+class {{ class }} extends MorphPivot
+{
+    {{ factoryTrait }}
+    use HasSnowflakes;
+}

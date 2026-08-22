@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f0131dc2c6a203e38c10ab057fa50560",
+    "content-hash": "b00dbe01b7e3800193347eb71278ee2d",
     "packages": [
         {
             "name": "brick/math",
@@ -3442,19 +3442,20 @@
         },
         {
             "name": "shipwelldev/cornerstone-support",
-            "version": "v0.2.0",
+            "version": "v0.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/shipwelldev/cornerstone-support.git",
-                "reference": "ab8ad10de36a525794ea23741b133efa08e1058c"
+                "reference": "76db6a3d8d91d659e824c9c6d123cf9516c41ce4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/shipwelldev/cornerstone-support/zipball/ab8ad10de36a525794ea23741b133efa08e1058c",
-                "reference": "ab8ad10de36a525794ea23741b133efa08e1058c",
+                "url": "https://api.github.com/repos/shipwelldev/cornerstone-support/zipball/76db6a3d8d91d659e824c9c6d123cf9516c41ce4",
+                "reference": "76db6a3d8d91d659e824c9c6d123cf9516c41ce4",
                 "shasum": ""
             },
             "require": {
+                "glhd/bits": "^0.6",
                 "laravel/framework": "^13.20",
                 "livewire/livewire": "^4.3",
                 "php": "~8.4.0 || ~8.5.0"
@@ -3510,7 +3511,7 @@
                 "issues": "https://github.com/shipwelldev/cornerstone-support/issues",
                 "source": "https://github.com/shipwelldev/cornerstone-support"
             },
-            "time": "2026-07-28T22:16:42+00:00"
+            "time": "2026-08-22T04:19:02+00:00"
         },
         {
             "name": "symfony/clock",
