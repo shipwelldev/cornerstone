@@ -1,6 +1,14 @@
 # Release Notes
 
-## [Unreleased](https://github.com/shipwelldev/cornerstone/compare/v0.4.0...main)
+## [Unreleased](https://github.com/shipwelldev/cornerstone/compare/v0.5.0...main)
+
+## [v0.5.0](https://github.com/shipwelldev/cornerstone/releases/tag/v0.5.0) - 2026-08-23
+
+* Require snowflake identifiers on the default User model and every generated application model, backed by architecture coverage and Cornerstone support 0.3.
+* Update Livewire, Pest, Pest Browser, Mockery, and Laravel Pint to their latest compatible releases.
+* Update the Laravel Vite plugin and concurrently to their latest compatible releases.
+
+**Full Changelog**: https://github.com/shipwelldev/cornerstone/compare/v0.4.0...v0.5.0
 
 ## [v0.4.0](https://github.com/shipwelldev/cornerstone/releases/tag/v0.4.0) - 2026-08-12
 
