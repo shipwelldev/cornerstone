@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Glhd\Bits\Database\HasSnowflakes;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Guarded;
 use Illuminate\Database\Eloquent\Attributes\Unguarded;
@@ -120,6 +121,10 @@ arch('models follow Laravel placement')
     ->toBeClasses()
     ->toExtend(Model::class);
 
+arch('models use snowflake identifiers')
+    ->expect('App\Models')
+    ->toUseTrait(HasSnowflakes::class);
+
 arch('Livewire components use their required namespace')
     ->expect('App\Livewire')
     ->toBeClasses()
@@ -153,6 +158,16 @@ test('models declare mass-assignment metadata', function (): void {
         ];
 
         expect($attributes)->not->toBeEmpty($model);
+    }
+});
+
+test('model stubs use snowflake identifiers', function (): void {
+    foreach (['model.stub', 'model.pivot.stub', 'model.morph-pivot.stub'] as $stub) {
+        $contents = readArchitectureFile(dirname(__DIR__, 2) . '/stubs/' . $stub);
+
+        expect($contents)
+            ->toContain('use ' . HasSnowflakes::class . ';')
+            ->toContain('use HasSnowflakes;');
     }
 });
 
