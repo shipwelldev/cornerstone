@@ -9,7 +9,7 @@
     "devDependencies": {
         "@tailwindcss/vite": "^4.3.3",
         "concurrently": "^10.0.5",
-        "fontaine": "^0.8.0",
+        "fontaine": "^0.8.1",
         "laravel-vite-plugin": "^3.2",
         "playwright": "^1.62.1",
         "tailwindcss": "^4.3.3",
