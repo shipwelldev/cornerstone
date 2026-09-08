@@ -2,6 +2,12 @@
 
 Cornerstone is both a maintained starter kit and the source exported into new applications. Changes must account for repository maintenance and downstream application behavior separately.
 
+## Find the right source
+
+Use the [application guide](docs/working-on-the-application.md) for the example and downstream workflows. Keep application documentation and authored `.ai` guidance useful without any installed agent integration. Personal tool configuration remains ignored; shared sources point to the coding standards instead of duplicating them.
+
+Repository-only design notes belong under `docs/maintenance`, which is excluded from exports. The [Artisan and skills tooling proposal](docs/maintenance/agent-tooling-design.md) records the future replacement scope; it does not change current Boost setup or declare proposed commands available.
+
 ## Prepare the repository
 
 Install the project and its development tooling:

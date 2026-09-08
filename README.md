@@ -4,6 +4,12 @@ Cornerstone is a strongly opinionated Laravel Livewire starter kit from [Ship We
 
 Cornerstone is [available on Packagist](https://packagist.org/packages/shipwelldev/cornerstone). Only the latest stable release is supported.
 
+## Start here
+
+Read [setup and development commands](#set-up-an-existing-checkout), the [coding standards and enforcement map](CODING_STANDARDS.md), and the [domain vocabulary](CONTEXT.md). The [application guide](docs/working-on-the-application.md) maps the example, common tasks, and source ownership for humans and agents. These documents work without installing agent tooling.
+
+Developer-specific agent configuration is intentionally ignored. Interactive Boost installation lets each developer choose their tools; shared guidance and skills live in `.ai`.
+
 ## What is included
 
 - Laravel 13 and Livewire 4
