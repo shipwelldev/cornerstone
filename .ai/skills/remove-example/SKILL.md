@@ -25,6 +25,8 @@ Read `CODING_STANDARDS.md`, inspect the current routes and Livewire components, 
 - `tests/Unit/ExpeditionPlanningServiceTest.php`
 - `tests/Browser/CanonicalExampleTest.php`
 
+When present, inspect the example map in `docs/working-on-the-application.md` and documentation links in `README.md` and `.ai/guidelines/project.md`. Include their references to the example and `CONTEXT.md` in the inventory.
+
 Inspect Git status, the current `HEAD`, recent commits, and the diff. Run `composer verify` to establish the baseline. If verification fails, report the failures and ask whether the user wants to continue before proceeding.
 
 Inventory is complete when every candidate has been classified as example-only, reused by user-owned code, or already absent, and the baseline result is known.
@@ -62,6 +64,8 @@ The checkpoint is complete when a safe commit hash exists and has been reported 
 ## 5. Remove The Slice
 
 Delete example-only classes, views, and tests. Preserve or adapt reused pieces exactly as agreed. Remove only the expedition section from `CONTEXT.md` when user vocabulary exists; delete the file only when it contains no user-owned language.
+
+Update or remove the example map in `docs/working-on-the-application.md` when present. If `CONTEXT.md` is removed, repair its links in `README.md`, `.ai/guidelines/project.md`, and any other documentation found during inventory.
 
 Apply the chosen home-route outcome and repair all affected named-route references. Keep every surviving Livewire component covered by a direct component test, and preserve functional coverage for every surviving behavior.
 
