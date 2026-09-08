@@ -213,11 +213,11 @@
                             </div>
                             <span @class([
                                 'w-fit rounded-full border px-3 py-1.5 font-mono text-[11px] font-semibold tracking-wider uppercase',
-                                'border-teal-300/20 bg-teal-300/10 text-teal-200' => $this->expeditionPlan->riskClassification === 'Routine',
-                                'border-amber-300/20 bg-amber-300/10 text-amber-200' => $this->expeditionPlan->riskClassification === 'Elevated',
-                                'border-red-300/20 bg-red-300/10 text-red-200' => $this->expeditionPlan->riskClassification === 'Extreme',
+                                'border-teal-300/20 bg-teal-300/10 text-teal-200' => $this->expeditionPlan->riskClassification === \App\Enums\RiskClassification::Routine,
+                                'border-amber-300/20 bg-amber-300/10 text-amber-200' => $this->expeditionPlan->riskClassification === \App\Enums\RiskClassification::Elevated,
+                                'border-red-300/20 bg-red-300/10 text-red-200' => $this->expeditionPlan->riskClassification === \App\Enums\RiskClassification::Extreme,
                             ])>
-                                {{ $this->expeditionPlan->riskClassification }} risk
+                                {{ $this->expeditionPlan->riskClassification->label() }} risk
                             </span>
                         </div>
 

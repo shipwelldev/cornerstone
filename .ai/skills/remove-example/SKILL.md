@@ -15,6 +15,7 @@ Read `CODING_STANDARDS.md`, inspect the current routes and Livewire components, 
 - `app/Data/ExpeditionPlanData.php`
 - `app/Enums/Destination.php`
 - `app/Enums/MissionPurpose.php`
+- `app/Enums/RiskClassification.php`
 - `app/Services/ExpeditionPlanningService.php`
 - `resources/views/livewire/home.blade.php`
 - `resources/views/components/faq-item.blade.php`

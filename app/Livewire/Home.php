@@ -37,6 +37,12 @@ class Home extends Component
     #[Locked]
     public bool $hasPlan = false;
 
+    public function updating(): void
+    {
+        $this->hasPlan = false;
+        unset($this->expeditionPlan);
+    }
+
     public function planExpedition(): void
     {
         $this->validate();
