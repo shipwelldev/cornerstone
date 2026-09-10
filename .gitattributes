@@ -16,3 +16,4 @@ CONTRIBUTING.md export-ignore
 /.github/workflows/release-smoke.yml export-ignore
 /.github/workflows/update-changelog.yml export-ignore
 /tests/Maintenance export-ignore
+/docs/maintenance export-ignore

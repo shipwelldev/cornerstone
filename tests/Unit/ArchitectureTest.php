@@ -11,16 +11,21 @@ use Livewire\Component;
 use PHPUnit\Framework\TestCase as PhpUnitTestCase;
 use Tests\TestCase as ApplicationTestCase;
 
-function applicationClassesIn(string $relativeDirectory = ''): array
+function applicationDeclarationsIn(string $relativeDirectory = ''): array
 {
-    $appDirectory = dirname(__DIR__, 2) . '/app/';
-    $directory = $appDirectory . $relativeDirectory;
+    return declarationsInDirectory(
+        dirname(__DIR__, 2) . '/app/' . $relativeDirectory,
+        'App' . ($relativeDirectory === '' ? '' : '\\' . str_replace('/', '\\', $relativeDirectory)),
+    );
+}
 
+function declarationsInDirectory(string $directory, string $namespace): array
+{
     if ( ! is_dir($directory)) {
         return [];
     }
 
-    $classes = [];
+    $declarations = [];
     $files = new RecursiveIteratorIterator(
         new RecursiveDirectoryIterator($directory, RecursiveDirectoryIterator::SKIP_DOTS),
     );
@@ -34,19 +39,19 @@ function applicationClassesIn(string $relativeDirectory = ''): array
             continue;
         }
 
-        $relativePath = mb_substr($file->getPathname(), mb_strlen($appDirectory), -4);
-        $class = 'App\\' . str_replace(DIRECTORY_SEPARATOR, '\\', $relativePath);
+        $relativePath = mb_substr($file->getPathname(), mb_strlen(mb_rtrim($directory, DIRECTORY_SEPARATOR)) + 1, -4);
+        $class = $namespace . '\\' . str_replace(DIRECTORY_SEPARATOR, '\\', $relativePath);
 
-        if ( ! class_exists($class)) {
-            throw new RuntimeException("Application class [{$class}] could not be loaded.");
+        if ( ! class_exists($class) && ! interface_exists($class) && ! trait_exists($class)) {
+            throw new RuntimeException("[STRUCT-01] Application declaration [{$class}] could not be loaded from its expected path.");
         }
 
-        $classes[] = $class;
+        $declarations[$class] = new ReflectionClass($class);
     }
 
-    sort($classes);
+    ksort($declarations);
 
-    return $classes;
+    return $declarations;
 }
 
 function bladeViewFiles(): array
@@ -83,74 +88,74 @@ function readArchitectureFile(string $path): string
     return $contents;
 }
 
-arch('application classes match their paths and casing')
+arch('[STRUCT-01] application classes match their paths and casing')
     ->expect('App')
     ->toBeCasedCorrectly();
 
-arch('services follow the service convention')
+arch('[STRUCT-02] services follow the service convention')
     ->expect('App\Services')
     ->toBeClasses()
     ->toHaveSuffix('Service');
 
-arch('application action classes are prohibited')
+arch('[STRUCT-02] application action classes are prohibited')
     ->expect('App')
     ->not->toHaveSuffix('Action');
 
-arch('the Actions namespace contains no classes')
+arch('[STRUCT-02] the Actions namespace contains no classes')
     ->expect('App\Actions')
     ->not->toBeClasses();
 
-arch('data objects follow the data convention')
+arch('[STRUCT-03] data objects follow the data convention')
     ->expect('App\Data')
     ->toBeClasses()
     ->toHaveSuffix('Data')
     ->toBeReadonly();
 
-arch('controllers follow Laravel placement and naming')
+arch('[STRUCT-01] controllers follow Laravel placement and naming')
     ->expect('App\Http\Controllers')
     ->toBeClasses()
     ->toHaveSuffix('Controller');
 
-arch('controllers are confined to their namespace')
+arch('[STRUCT-01] controllers are confined to their namespace')
     ->expect('App')
     ->not->toHaveSuffix('Controller')
     ->ignoring('App\Http\Controllers');
 
-arch('models follow Laravel placement')
+arch('[STRUCT-01] models follow Laravel placement')
     ->expect('App\Models')
     ->toBeClasses()
     ->toExtend(Model::class);
 
-arch('models use snowflake identifiers')
+arch('[DATA-02] models use snowflake identifiers')
     ->expect('App\Models')
     ->toUseTrait(HasSnowflakes::class);
 
-arch('Livewire components use their required namespace')
+arch('[UI-01] Livewire components use their required namespace')
     ->expect('App\Livewire')
     ->toBeClasses()
     ->toExtend(Component::class);
 
-arch('Livewire components are confined to their namespace')
+arch('[UI-01] Livewire components are confined to their namespace')
     ->expect('App')
     ->not->toExtend(Component::class)
     ->ignoring('App\Livewire');
 
-arch('environment variables are not read by application classes')
+arch('[BOUNDARY-02] environment variables are not read by application classes')
     ->expect('env')
     ->not->toBeUsed();
 
-arch('application tests use Pest rather than PHPUnit classes')
+arch('[TEST-01] application tests use Pest rather than PHPUnit classes')
     ->expect('Tests')
     ->not->toExtend(PhpUnitTestCase::class)
     ->ignoring(ApplicationTestCase::class);
 
-test('models declare mass-assignment metadata', function (): void {
-    foreach (applicationClassesIn('Models') as $model) {
-        if ( ! is_string($model) || ! class_exists($model)) {
-            throw new RuntimeException('Model architecture checks require loadable class names.');
+test('[DATA-01] models declare mass-assignment metadata', function (): void {
+    foreach (applicationDeclarationsIn('Models') as $reflection) {
+        if ( ! $reflection instanceof ReflectionClass) {
+            throw new RuntimeException('Architecture checks require reflected declarations.');
         }
 
-        $reflection = new ReflectionClass($model);
+        $model = $reflection->getName();
         $attributes = [
             ...$reflection->getAttributes(Fillable::class),
             ...$reflection->getAttributes(Guarded::class),
@@ -161,7 +166,7 @@ test('models declare mass-assignment metadata', function (): void {
     }
 });
 
-test('model stubs use snowflake identifiers', function (): void {
+test('[DATA-02] model stubs use snowflake identifiers', function (): void {
     foreach (['model.stub', 'model.pivot.stub', 'model.morph-pivot.stub'] as $stub) {
         $contents = readArchitectureFile(dirname(__DIR__, 2) . '/stubs/' . $stub);
 
@@ -171,21 +176,13 @@ test('model stubs use snowflake identifiers', function (): void {
     }
 });
 
-test('data properties are typed and promoted', function (): void {
-    $dataClasses = applicationClassesIn('Data');
-
-    if ($dataClasses === []) {
-        expect(is_dir(dirname(__DIR__, 2) . '/app/Data'))->toBeFalse();
-
-        return;
-    }
-
-    foreach ($dataClasses as $data) {
-        if ( ! is_string($data) || ! class_exists($data)) {
-            throw new RuntimeException('Data architecture checks require loadable class names.');
+test('[STRUCT-03] data properties are typed and promoted', function (): void {
+    foreach (applicationDeclarationsIn('Data') as $reflection) {
+        if ( ! $reflection instanceof ReflectionClass) {
+            throw new RuntimeException('Architecture checks require reflected declarations.');
         }
 
-        $reflection = new ReflectionClass($data);
+        $data = $reflection->getName();
 
         foreach ($reflection->getProperties() as $property) {
             if ($property->getDeclaringClass()->getName() !== $data) {
@@ -200,13 +197,13 @@ test('data properties are typed and promoted', function (): void {
     }
 });
 
-test('Livewire public properties have native types', function (): void {
-    foreach (applicationClassesIn('Livewire') as $component) {
-        if ( ! is_string($component) || ! class_exists($component)) {
-            throw new RuntimeException('Livewire architecture checks require loadable class names.');
+test('[UI-02] Livewire public properties have native types', function (): void {
+    foreach (applicationDeclarationsIn('Livewire') as $reflection) {
+        if ( ! $reflection instanceof ReflectionClass) {
+            throw new RuntimeException('Architecture checks require reflected declarations.');
         }
 
-        $reflection = new ReflectionClass($component);
+        $component = $reflection->getName();
 
         foreach ($reflection->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {
             if ($property->getDeclaringClass()->getName() === $component) {
@@ -218,26 +215,88 @@ test('Livewire public properties have native types', function (): void {
     }
 });
 
-test('application methods use camelCase names', function (): void {
-    foreach (applicationClassesIn() as $class) {
-        if ( ! is_string($class) || ! class_exists($class)) {
-            throw new RuntimeException('Method architecture checks require loadable class names.');
+function nonCamelCaseMethods(string $class): array
+{
+    if ( ! class_exists($class) && ! interface_exists($class) && ! trait_exists($class)) {
+        throw new RuntimeException("Application declaration [{$class}] could not be loaded.");
+    }
+
+    $declaration = new ReflectionClass($class);
+    $violations = [];
+
+    foreach ($declaration->getMethods() as $method) {
+        if ($method->getDeclaringClass()->getName() !== $declaration->getName() || str_starts_with($method->getName(), '__')) {
+            continue;
         }
 
-        $reflection = new ReflectionClass($class);
-
-        foreach ($reflection->getMethods() as $method) {
-            if ($method->getDeclaringClass()->getName() === $class && ! str_starts_with($method->getName(), '__')) {
-                $methodName = $method->getName();
-
-                expect($methodName)
-                    ->toMatch('/^[a-z][A-Za-z0-9]*$/', "{$class}::{$methodName}");
-            }
+        if (preg_match('/^[a-z][A-Za-z0-9]*$/', $method->getName()) !== 1) {
+            $violations[] = $declaration->getName() . '::' . $method->getName();
         }
+    }
+
+    return $violations;
+}
+
+test('[STRUCT-01] application declaration methods use camelCase names', function (): void {
+    foreach (applicationDeclarationsIn() as $declaration) {
+        if ( ! $declaration instanceof ReflectionClass) {
+            throw new RuntimeException('Method architecture checks require reflected declarations.');
+        }
+
+        expect(nonCamelCaseMethods($declaration->getName()))->toBeEmpty($declaration->getName());
     }
 });
 
-test('Blade views use kebab-case filenames and contain no raw PHP', function (): void {
+test('architecture discovery checks methods on classes, interfaces, traits, and enums', function (): void {
+    $directory = sys_get_temp_dir() . '/cornerstone-architecture-' . bin2hex(random_bytes(8));
+    $namespace = 'ArchitectureFixture' . bin2hex(random_bytes(8));
+    mkdir($directory);
+    $loader = static function (string $class) use ($namespace, $directory): void {
+        if (str_starts_with($class, $namespace . '\\')) {
+            require_once $directory . '/' . mb_substr($class, mb_strlen($namespace) + 1) . '.php';
+        }
+    };
+    spl_autoload_register($loader);
+
+    try {
+        expect(declarationsInDirectory($directory, $namespace))->toBeEmpty();
+
+        foreach (['class', 'interface', 'trait', 'enum'] as $kind) {
+            foreach (['Valid' => 'calculatePlan', 'Invalid' => 'calculate_plan'] as $label => $method) {
+                $name = $label . ucfirst($kind);
+                $body = $kind === 'interface' ? ';' : ' {}';
+                file_put_contents($directory . '/' . $name . '.php', "<?php declare(strict_types=1); namespace {$namespace}; {$kind} {$name} { public function {$method}(): void{$body} }");
+            }
+        }
+
+        $declarations = declarationsInDirectory($directory, $namespace);
+        expect($declarations)->toHaveCount(8);
+
+        foreach ($declarations as $name => $declaration) {
+            if ( ! is_string($name) || ! $declaration instanceof ReflectionClass) {
+                throw new RuntimeException('Fixtures must resolve to named declarations.');
+            }
+
+            expect(nonCamelCaseMethods($declaration->getName()))->toBe(
+                str_contains($name, '\\Invalid') ? [$name . '::calculate_plan'] : [],
+            );
+        }
+
+        file_put_contents($directory . '/WrongPath.php', "<?php declare(strict_types=1); namespace {$namespace}; class DifferentName {}");
+        expect(fn (): array => declarationsInDirectory($directory, $namespace))
+            ->toThrow(RuntimeException::class, '[STRUCT-01] Application declaration');
+    } finally {
+        spl_autoload_unregister($loader);
+
+        foreach (glob($directory . '/*.php') ?: [] as $file) {
+            unlink($file);
+        }
+
+        rmdir($directory);
+    }
+});
+
+test('[LANG-04, STRUCT-01] Blade views use kebab-case filenames and contain no raw PHP', function (): void {
     foreach (bladeViewFiles() as $view) {
         if ( ! is_string($view)) {
             throw new RuntimeException('Blade architecture checks require string paths.');

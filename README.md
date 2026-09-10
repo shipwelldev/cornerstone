@@ -4,6 +4,12 @@ Cornerstone is a strongly opinionated Laravel Livewire starter kit from [Ship We
 
 Cornerstone is [available on Packagist](https://packagist.org/packages/shipwelldev/cornerstone). Only the latest stable release is supported.
 
+## Start here
+
+Read [setup and development commands](#set-up-an-existing-checkout), the [coding standards and enforcement map](CODING_STANDARDS.md), and the [domain vocabulary](CONTEXT.md). The [application guide](docs/working-on-the-application.md) maps the example, common tasks, and source ownership for humans and agents. These documents work without installing agent tooling.
+
+Developer-specific agent configuration is intentionally ignored. Interactive Boost installation lets each developer choose their tools; shared guidance and skills live in `.ai`.
+
 ## What is included
 
 - Laravel 13 and Livewire 4
@@ -116,9 +122,11 @@ Review or preserve any local stub customizations before using `--force`.
 - `composer dev` supervises the web server, queue listener, application log stream, and Vite; if one process fails, the group stops.
 - `composer fix` applies the formatter and may rewrite source. Review its diff.
 - `composer analyse` runs Larastan independently.
-- `composer test` runs all Pest suites, including Chromium browser tests, independently and in parallel.
+- `composer test:application` runs the Unit and Feature suites in parallel.
+- `composer test:browser` runs the Chromium browser suite and cleans up its background services on Linux and macOS. Build assets first after frontend changes.
+- `composer test` runs the application suite followed by the browser suite.
 - `composer build` creates production frontend assets independently.
-- `composer verify` performs non-correcting formatting validation, analysis, all tests, and a production build in that order.
+- `composer verify` performs non-correcting formatting validation, analysis, a production build, application tests, and browser tests in that order.
 
 For normal development, configure and migrate the database, run `composer dev`, and open the URL printed by the Laravel server. Before requesting review, run `composer fix`, review its changes, and run `composer verify`.
 

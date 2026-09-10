@@ -2,13 +2,13 @@
 
 This is the single coding standard for Cornerstone maintenance and every generated application. The words Rule, Guideline, and Recommendation have the meanings below; they are not interchangeable.
 
-## Prinicpals
+## Principles
 
-To begin there are some basic overarching prinicpals that you chould keep in mind when wirting code for this project:
+Keep these overarching principles in mind when writing code:
 
 - YAGNI "You ain't gonna need it" is your friend. That means: Implement things when you actually need them, never when you just foresee that you need them.
 - Prefer simple clear and obvious code over clever "shortcuts". Assume a novice may need to read and understand what the code does.
-- Class/Method/Variable names matter. Verbosity is prefered over short vauge names that don't convey what it is or what it does.
+- Class/Method/Variable names matter. Verbosity is preferred over short vague names that don't convey what it is or what it does.
 - Prefer explicit code over implicit code. Don't assume something is clear, make it clear.
 
 ## Authority and precedence
@@ -29,55 +29,87 @@ A human-approved exception changes neither the Rule nor its default enforcement.
 
 ### Language, formatting, and analysis
 
-- Every standalone PHP file declares `strict_types=1`, and application declarations use accurate native parameter, property, and return types.
-- Committed PHP follows the committed PER-based Pint configuration. `composer fix` may correct source; `composer verify` validates formatting without mutation.
-- Larastan analyzes all standalone application PHP at the committed level. New application PHP belongs in an analyzed path.
-- Blade contains no raw PHP. PHP behavior belongs in a class; Blade remains presentation-only.
-- Use supported Laravel metadata attributes when the framework provides them for application metadata.
+- **LANG-01** Every standalone PHP file declares `strict_types=1`, and application declarations use accurate native parameter, property, and return types.
+- **LANG-02** Committed PHP follows the committed PER-based Pint configuration. `composer fix` may correct source; `composer verify` validates formatting without mutation.
+- **LANG-03** Larastan analyzes all standalone application PHP at the committed level. New application PHP belongs in an analyzed path.
+- **LANG-04** Blade contains no raw PHP. PHP behavior belongs in a class; Blade remains presentation-only.
+- **LANG-05** Use supported Laravel metadata attributes when the framework provides them for application metadata.
 
 ### Structure and naming
 
-- Follow Laravel naming and placement conventions. Classes and files use PascalCase; methods and variables use camelCase; database names use snake_case; Blade views use kebab-case.
-- Extracted application orchestration is a Service under `App\Services` with a `Service` suffix. Do not create application Action classes.
-- Data transfer objects belong under `App\Data`, use a `Data` suffix, and are readonly classes with typed promoted properties.
-- Controllers and Livewire components are entry boundaries, not homes for extracted business orchestration.
-- Application TODO and FIXME comments link to the issue that owns their removal.
+- **STRUCT-01** Follow Laravel naming and placement conventions. Classes and files use PascalCase; methods and variables use camelCase; database names use snake_case; Blade views use kebab-case.
+- **STRUCT-02** Extracted application orchestration is a Service under `App\Services` with a `Service` suffix. Do not create application Action classes.
+- **STRUCT-03** Data transfer objects belong under `App\Data`, use a `Data` suffix, and are readonly classes with typed promoted properties.
+- **STRUCT-04** Controllers and Livewire components are entry boundaries, not homes for extracted business orchestration.
+- **STRUCT-05** Application TODO and FIXME comments link to the issue that owns their removal.
 
 ### Eloquent and persistence
 
-- Every application-owned model explicitly declares mass-assignment metadata through a supported attribute. When a model has a factory, it declares that factory through a supported attribute. Hidden, visible, cast, table, connection, timestamp, and key metadata are explicit whenever behavior differs from an unambiguous framework default.
-- Every Eloquent relationship is an explicitly named model method with an accurate native `Relation` subtype return type.
-- Tests create application models through factories and useful factory states rather than duplicating model construction.
-- Migrations are safe for populated databases, preserve data intentionally, use matching key types and indexes, and avoid environment-specific schema behavior.
-- Multi-write operations that must succeed or fail together use a database transaction. Race-sensitive operations use an appropriate atomic lock, uniqueness constraint, or row lock.
-- Application code does not permit hidden lazy loading.
+- **DATA-01** Every application-owned model explicitly declares mass-assignment metadata through a supported attribute. When a model has a factory, it declares that factory through a supported attribute. Hidden, visible, cast, table, connection, timestamp, and key metadata are explicit whenever behavior differs from an unambiguous framework default.
+- **DATA-02** Application-owned Eloquent models under `App\Models`, including custom pivot and morph-pivot models, use `Glhd\Bits\Database\HasSnowflakes` for their primary identifiers. Generated model stubs preserve this convention. Related foreign keys use compatible types; framework infrastructure tables and pivot tables without an application-owned model do not acquire this requirement merely by existing.
+- **DATA-03** Every Eloquent relationship is an explicitly named model method with an accurate native `Relation` subtype return type.
+- **DATA-04** Tests create application models through factories and useful factory states rather than duplicating model construction.
+- **DATA-05** Migrations are safe for populated databases, preserve data intentionally, use matching key types and indexes, and avoid environment-specific schema behavior.
+- **DATA-06** Multi-write operations that must succeed or fail together use a database transaction. Race-sensitive operations use an appropriate atomic lock, uniqueness constraint, or row lock.
+- **DATA-07** Application code does not permit hidden lazy loading.
 
 ### Livewire, Blade, and browser state
 
-- Livewire components are named classes under `App\Livewire` with external Blade views. Every component has a direct Livewire test.
-- Livewire public properties have native types and are validated at the boundary or locked against client mutation. Authorization-sensitive identifiers are locked even when validation also applies.
-- Livewire owns server and persisted interaction state. Alpine owns ephemeral browser-only state and uses Livewire's bundled Alpine runtime; do not install or boot a duplicate Alpine runtime.
-- Blade uses escaped `{{ }}` output by default. Unescaped output is permitted only for an explicitly trusted, reviewed safe-HTML value.
+- **UI-01** Livewire components are named classes under `App\Livewire` with external Blade views. Every component has a direct Livewire test.
+- **UI-02** Livewire public properties have native types and are validated at the boundary or locked against client mutation. Authorization-sensitive identifiers are locked even when validation also applies.
+- **UI-03** Livewire owns server and persisted interaction state. Alpine owns ephemeral browser-only state and uses Livewire's bundled Alpine runtime; do not install or boot a duplicate Alpine runtime.
+- **UI-04** Blade uses escaped `{{ }}` output by default. Unescaped output is permitted only for an explicitly trusted, reviewed safe-HTML value.
 
 ### Entry boundaries, security, and APIs
 
-- Validate and authorize untrusted operations at every HTTP, Livewire, console, queue, and consumer API entry boundary. Validation never substitutes for authorization.
-- Generate internal URLs with named routes. Read environment variables only from configuration files; application code consumes configuration.
-- Never expose, log, commit, paste, or place secrets in command arguments. Treat credentials and user-sensitive data as secrets throughout errors, queues, logs, and third-party calls.
-- Uploads require validation of type and size, application-generated storage names, non-executable storage, and explicit authorization for upload and retrieval.
-- Preserve Laravel's CSRF, signed URL, encryption, hashing, and request protections. Disabling a framework protection is a Rule exception.
-- Apply explicit rate limiting to authentication, expensive, abusive, or externally exposed operations, with limits chosen for the operation rather than a universal placeholder.
-- Consumer APIs are versioned and return Eloquent data through API Resources rather than exposing models directly.
-- Exceptions are surfaced to Laravel's reporting pipeline. Do not swallow failures or convert them to misleading success responses.
+- **BOUNDARY-01** Validate and authorize untrusted operations at every HTTP, Livewire, console, queue, and consumer API entry boundary. Validation never substitutes for authorization.
+- **BOUNDARY-02** Generate internal URLs with named routes. Read environment variables only from configuration files; application code consumes configuration.
+- **BOUNDARY-03** Never expose, log, commit, paste, or place secrets in command arguments. Treat credentials and user-sensitive data as secrets throughout errors, queues, logs, and third-party calls.
+- **BOUNDARY-04** Uploads require validation of type and size, application-generated storage names, non-executable storage, and explicit authorization for upload and retrieval.
+- **BOUNDARY-05** Preserve Laravel's CSRF, signed URL, encryption, hashing, and request protections. Disabling a framework protection is a Rule exception.
+- **BOUNDARY-06** Apply explicit rate limiting to authentication, expensive, abusive, or externally exposed operations, with limits chosen for the operation rather than a universal placeholder.
+- **BOUNDARY-07** Consumer APIs are versioned and return Eloquent data through API Resources rather than exposing models directly.
+- **BOUNDARY-08** Exceptions are surfaced to Laravel's reporting pipeline. Do not swallow failures or convert them to misleading success responses.
 
 ### Testing
 
-- Pest is the only application test style. Every behavior change has a functional test at its public seam with semantic assertions.
-- Feature tests use the globally configured database refresh. Tests that create models use factories.
-- Every Livewire component has a direct component test in addition to any route or browser coverage.
-- Test names describe behavior. Avoid tautologies, implementation-coupled mocks, broad snapshots, weak source-text proxies, and assertions that merely restate configuration.
-- Tests contain no unowned skips or placeholders. TODO and FIXME comments are issue-linked.
-- Tests validate functionality not presentation. Don't be aserting that you see specific strings, assert the correct outcome occurs when an action is taken.
+- **TEST-01** Pest is the only application test style. Every behavior change has a functional test at its public seam with semantic assertions.
+- **TEST-02** Feature tests use the globally configured database refresh. Tests that create models use factories.
+- **TEST-03** Every Livewire component has a direct component test in addition to any route or browser coverage.
+- **TEST-04** Test names describe behavior. Avoid tautologies, implementation-coupled mocks, broad snapshots, weak source-text proxies, and assertions that merely restate configuration.
+- **TEST-05** Tests contain no unowned skips or placeholders. TODO and FIXME comments are issue-linked.
+- **TEST-06** Tests assert semantic outcomes and observable workflow transitions. Visible content assertions are appropriate when content is the behavior, such as validation feedback, a calculated recommendation, or an accessible control name. Scope assertions to the relevant result or control; avoid incidental instructional copy, styling, and unscoped strings or numbers that could appear elsewhere on the page.
+
+## Enforcement map
+
+Rule identifiers are stable references for review and tool failures. Do not renumber existing rules when adding another. Every rule still requires review of its intent; automation covers only the facts listed here.
+
+| Rules | Automated evidence | Remaining human review |
+| --- | --- | --- |
+| LANG-01–03 | Pint strict-types/formatting checks and Larastan at the committed level and paths | Accurate types, complete analyzed paths, and the limitations recorded below |
+| LANG-04, STRUCT-01 | Architecture checks for Blade raw PHP, view filenames, declaration paths/casing, and method names | Presentation boundaries, variable/database naming, and understandable names |
+| LANG-05, DATA-01 | Architecture reflection checks for mass-assignment attributes | Other supported metadata, factory declaration and metadata intent |
+| STRUCT-02–03 | Architecture checks for prohibited Actions, Service/Data namespace contents, suffixes, readonly Data and typed promoted properties | Meaningful orchestration and Data boundaries |
+| STRUCT-04–05 | Review | Thin entry boundaries and issue-linked comments |
+| DATA-02 | Architecture checks for model and published-stub snowflake traits | Compatible schema, foreign keys, and identifier representation |
+| DATA-03–07 | Larastan checks declared relationship return types where inferable; application tests exercise behavior | Cardinality, factories, data preservation, concurrency, and eager loading |
+| UI-01–02 | Architecture checks for Livewire placement and native public-property types; direct component tests | Test completeness, validation, locking, and authorization |
+| UI-03–04 | Application/browser tests where relevant | State ownership, a single Alpine runtime, escaping and trusted HTML provenance |
+| BOUNDARY-02 | Architecture check rejects application `env()` use | Named routes and configuration boundaries |
+| BOUNDARY-01, BOUNDARY-03–08 | Functional tests and analysis where relevant | Security, entry-boundary coverage, compatibility, and observable failures |
+| TEST-01–06 | Architecture check rejects PHPUnit application test classes; Pest runs behavior tests | Semantic assertions, adequate failure cases, factories, refresh scope, and no unowned skips |
+
+### Existing analysis limitations
+
+The committed `phpstan.neon.dist` contains these existing suppressions. This inventory records their effect; it does not authorize additional ignores or DocBlocks.
+
+| Suppression | Current scope and rationale | Review obligation |
+| --- | --- | --- |
+| `missingType.iterableValue` | All analyzed paths; native PHP cannot express iterable element types and the project avoids DocBlocks. Unmatched reports are disabled. | Analysis cannot prove element types from a bare `array` or iterable declaration. Prefer meaningful Data objects for owned structures, validate external collections at boundaries, and review element assumptions explicitly. A future narrowing requires evidence that framework collections and tests remain analyzable under the no-DocBlock policy. |
+| `missingType.generics` for `HasFactory` | Only the matching trait diagnostic under `app/Models/*`; Larastan does not infer the generic from `UseFactory`. Unmatched reports are enabled. | Keep the factory attribute accurate; reassess when attribute inference changes. |
+| `missingType.generics` for `Factory` | Only the matching parent-class diagnostic under `database/factories/*`; Larastan does not infer the generic from `UseModel`. Unmatched reports are enabled. | Keep the model attribute accurate; reassess when attribute inference changes. |
+
+The factory limitations reference [Larastan issue 2328](https://github.com/larastan/larastan/issues/2328). `composer analyse` passing does not establish iterable element correctness. Architecture namespace exclusions have specific roles: the canonical controller, Livewire, and test-base namespaces are excluded only from checks that prohibit those declarations elsewhere. Review changes to these scopes under the suppression policy.
 
 ## Guidelines
 

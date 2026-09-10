@@ -9,7 +9,7 @@ The validated description of a proposed expedition, including its call sign, des
 _Avoid_: Form data, request payload
 
 **Expedition Plan**:
-An immutable, transient planning result generated from a Mission Brief.
+An immutable, transient planning result generated from a Mission Brief. Editing any part of the brief discards its plan; another successful submission is required to generate a new plan.
 _Avoid_: Result, response
 
 **Supply Recommendation**:
@@ -17,7 +17,7 @@ Equipment guidance for one of the navigation, survival, or mission-specialist co
 _Avoid_: Item, suggestion
 
 **Risk Classification**:
-The Routine, Elevated, or Extreme risk level calculated from a Mission Brief.
+The Routine, Elevated, or Extreme risk level calculated from a Mission Brief and represented by `RiskClassification`. Each classification determines the survival recommendation and advisory.
 _Avoid_: Readiness, status
 
 **Destination**:
