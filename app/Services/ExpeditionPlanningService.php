@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Data\ExpeditionPlanData;
 use App\Enums\Destination;
 use App\Enums\MissionPurpose;
+use App\Enums\RiskClassification;
 
 class ExpeditionPlanningService
 {
@@ -45,7 +46,7 @@ class ExpeditionPlanningService
         MissionPurpose $missionPurpose,
         int $crewSize,
         int $durationInDays,
-    ): string {
+    ): RiskClassification {
         $riskScore = $this->destinationRiskScore($destination);
         $riskScore += $this->missionPurposeRiskScore($missionPurpose);
 
@@ -62,14 +63,14 @@ class ExpeditionPlanningService
         }
 
         if ($riskScore >= 5) {
-            return 'Extreme';
+            return RiskClassification::Extreme;
         }
 
         if ($riskScore >= 3) {
-            return 'Elevated';
+            return RiskClassification::Elevated;
         }
 
-        return 'Routine';
+        return RiskClassification::Routine;
     }
 
     private function destinationRiskScore(Destination $destination): int
@@ -111,12 +112,12 @@ class ExpeditionPlanningService
         };
     }
 
-    private function survivalRecommendation(string $riskClassification): string
+    private function survivalRecommendation(RiskClassification $riskClassification): string
     {
         return match ($riskClassification) {
-            'Extreme' => 'Assign every crew member an emergency stasis pod and independent distress transmitter.',
-            'Elevated' => 'Add a shielded refuge module with seventy-two hours of reserve atmosphere.',
-            default => 'Carry one reserve oxygen pack per crew member for routine contingencies.',
+            RiskClassification::Extreme => 'Assign every crew member an emergency stasis pod and independent distress transmitter.',
+            RiskClassification::Elevated => 'Add a shielded refuge module with seventy-two hours of reserve atmosphere.',
+            RiskClassification::Routine => 'Carry one reserve oxygen pack per crew member for routine contingencies.',
         };
     }
 
@@ -129,12 +130,12 @@ class ExpeditionPlanningService
         };
     }
 
-    private function advisory(string $riskClassification): string
+    private function advisory(RiskClassification $riskClassification): string
     {
         return match ($riskClassification) {
-            'Extreme' => 'Multiple risk factors overlap. Establish an abort window before crossing the final relay.',
-            'Elevated' => 'Build one full contingency day into the flight plan and review the primary hazard at briefing.',
-            default => 'Standard expedition protocols are sufficient, with routine checks at every relay.',
+            RiskClassification::Extreme => 'Multiple risk factors overlap. Establish an abort window before crossing the final relay.',
+            RiskClassification::Elevated => 'Build one full contingency day into the flight plan and review the primary hazard at briefing.',
+            RiskClassification::Routine => 'Standard expedition protocols are sufficient, with routine checks at every relay.',
         };
     }
 }

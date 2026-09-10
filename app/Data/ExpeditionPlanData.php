@@ -6,6 +6,7 @@ namespace App\Data;
 
 use App\Enums\Destination;
 use App\Enums\MissionPurpose;
+use App\Enums\RiskClassification;
 
 readonly class ExpeditionPlanData
 {
@@ -15,7 +16,7 @@ readonly class ExpeditionPlanData
         public int $crewSize,
         public int $durationInDays,
         public MissionPurpose $missionPurpose,
-        public string $riskClassification,
+        public RiskClassification $riskClassification,
         public int $rationPacks,
         public int $waterLiters,
         public string $navigationRecommendation,
