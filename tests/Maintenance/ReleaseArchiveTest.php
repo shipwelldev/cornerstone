@@ -65,6 +65,10 @@ test('release archives contain application files and exclude repository maintena
             'LICENSE.md',
             'composer.json',
             'composer.lock',
+            'scripts/Setup.php',
+            'scripts/ProjectSetup.php',
+            'scripts/RunBrowserTests.php',
+            'scripts/TestBrowser.mjs',
             'CODING_STANDARDS.md',
             'phpunit.xml',
             'tests/Pest.php',
@@ -178,3 +182,59 @@ test('exported applications publish Pest Agent guidance without starting browser
         removeTemporaryDirectory(dirname($exportDirectory));
     }
 });
+
+test('exported environment preparation creates a usable encryption key from empty assignments', function (string $assignment): void {
+    $exportDirectory = buildReleaseArchiveFromWorkingTree();
+
+    try {
+        $repository = dirname(__DIR__, 2);
+        symlink($repository . '/vendor', $exportDirectory . '/vendor');
+
+        foreach (['packages.php', 'services.php'] as $cacheFile) {
+            copy($repository . '/bootstrap/cache/' . $cacheFile, $exportDirectory . '/bootstrap/cache/' . $cacheFile);
+        }
+
+        file_put_contents($exportDirectory . '/.env', "APP_NAME=Cornerstone\nAPP_KEY={$assignment}\nCUSTOM_VALUE=preserved\n");
+        $environment = ['APP_ENV' => 'local', 'APP_KEY' => false, 'COMPOSER' => false, 'PARATEST' => '1'];
+        $prepare = new Process(['composer', '--no-interaction', 'prepare-environment'], $exportDirectory, $environment);
+        $prepare->run();
+
+        expect($prepare->isSuccessful())->toBeTrue($prepare->getErrorOutput());
+        $firstEnvironmentHash = hash_file('sha256', $exportDirectory . '/.env');
+        $repeat = new Process(['composer', '--no-interaction', 'prepare-environment'], $exportDirectory, $environment);
+        $repeat->run();
+
+        expect($repeat->isSuccessful())->toBeTrue($repeat->getErrorOutput())
+            ->and(hash_file('sha256', $exportDirectory . '/.env'))->toBe($firstEnvironmentHash);
+
+        // Bootstrap another PHP process to consume the newly written environment,
+        // so success requires a valid key rather than Artisan's in-memory value.
+        file_put_contents($exportDirectory . '/verify-key.php', <<<'PHPFILE'
+<?php
+
+declare(strict_types=1);
+
+require __DIR__ . '/vendor/autoload.php';
+$app = require __DIR__ . '/bootstrap/app.php';
+$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+$encrypter = $app->make('encrypter');
+$value = 'encryption round trip';
+exit($encrypter->decryptString($encrypter->encryptString($value)) === $value ? 0 : 1);
+PHPFILE);
+        $verify = new Process([PHP_BINARY, 'verify-key.php'], $exportDirectory, $environment);
+        $verify->run();
+
+        expect($verify->isSuccessful())->toBeTrue('The freshly bootstrapped application must encrypt and decrypt with the prepared key.');
+        $contents = file_get_contents($exportDirectory . '/.env');
+
+        expect($contents)->toBeString()->toContain("APP_NAME=Cornerstone\n", "CUSTOM_VALUE=preserved\n");
+
+        $commentStart = mb_strpos($assignment, '#');
+
+        if ($commentStart !== false) {
+            expect($contents)->toContain(mb_substr($assignment, $commentStart));
+        }
+    } finally {
+        removeTemporaryDirectory(dirname($exportDirectory));
+    }
+})->with(['', '""', "''", '   ', '"" # key comment', '"" # key comment $1 \\literal']);

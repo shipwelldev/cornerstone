@@ -63,7 +63,7 @@
             "npm run build"
         ],
         "configure-boost": [
-            "@php -r \"if (! file_exists('boost.json')) { exit(0); } \\$config = json_decode(file_get_contents('boost.json'), true); if (! is_array(\\$config)) { fwrite(STDERR, 'Unable to configure Boost because boost.json is invalid.' . PHP_EOL); exit(1); } foreach (['packages' => 'pestphp/pest-plugin-agent', 'skills' => 'pest-plugin-agent'] as \\$key => \\$value) { \\$values = \\$config[\\$key] ?? []; if (! is_array(\\$values)) { fwrite(STDERR, 'Unable to configure Boost because [' . \\$key . '] is invalid.' . PHP_EOL); exit(1); } \\$values[] = \\$value; \\$config[\\$key] = array_values(array_unique(\\$values)); } ksort(\\$config); if (file_put_contents('boost.json', json_encode(\\$config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL) === false) { fwrite(STDERR, 'Unable to write boost.json.' . PHP_EOL); exit(1); } putenv('PARATEST=1'); passthru(escapeshellarg(PHP_BINARY) . ' artisan boost:update --ansi --no-interaction', \\$exitCode); exit(\\$exitCode);\""
+            "@php scripts/Setup.php configure-boost"
         ],
         "fix": [
             "@php vendor/bin/pint --format agent"
@@ -75,11 +75,10 @@
             "@php vendor/bin/pint --format agent"
         ],
         "prepare-environment": [
-            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
-            "@php -r \"\\$environment = file_get_contents('.env'); if (\\$environment === false || preg_match('/^APP_KEY=.+$/m', \\$environment) !== 1) { passthru(escapeshellarg(PHP_BINARY) . ' artisan key:generate --ansi --no-interaction', \\$exitCode); exit(\\$exitCode); }\""
+            "@php scripts/Setup.php prepare-environment"
         ],
         "install-boost": [
-            "@php -r \"\\$nonInteractive = filter_var(getenv('COMPOSER_NO_INTERACTION'), FILTER_VALIDATE_BOOL); if (file_exists('boost.json')) { exit(0); } if (\\$nonInteractive || ! stream_isatty(STDIN)) { fwrite(STDOUT, PHP_EOL . 'Boost setup was skipped because Composer is running non-interactively.' . PHP_EOL . 'Run composer setup in an interactive terminal to finish setup.' . PHP_EOL); exit(0); } passthru(escapeshellarg(PHP_BINARY) . ' artisan boost:install --ansi', \\$exitCode); exit(\\$exitCode);\""
+            "@php scripts/Setup.php install-boost"
         ],
         "setup": [
             "@composer install --no-interaction --prefer-dist @no_additional_args",
@@ -95,13 +94,20 @@
             "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1 --timeout=0\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"
         ],
         "test": [
-            "@php artisan test --ci --parallel --compact"
+            "@test:application",
+            "@test:browser"
+        ],
+        "test:application": [
+            "@php artisan test --ci --parallel --compact --exclude-testsuite=Browser"
+        ],
+        "test:browser": [
+            "@php scripts/RunBrowserTests.php"
         ],
         "verify": [
             "@php vendor/bin/pint --test --format agent",
             "@analyse",
-            "@test",
-            "@build"
+            "@build",
+            "@test"
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
@@ -109,10 +115,10 @@
         ],
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force",
-            "@php -r \"if (file_exists('boost.json')) { putenv('PARATEST=1'); passthru(escapeshellarg(PHP_BINARY) . ' artisan boost:update --ansi', \\$exitCode); exit(\\$exitCode); }\""
+            "@php scripts/Setup.php update-boost"
         ],
         "post-root-package-install": [
-            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
+            "@php scripts/Setup.php copy-environment"
         ],
         "post-create-project-cmd": [
             "@composer update shipwelldev/cornerstone-support --no-interaction @no_additional_args",

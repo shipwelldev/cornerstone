@@ -88,5 +88,5 @@ jobs:
         working-directory: smoke-app
         run: |
           composer analyse
-          php artisan test --ci --compact --exclude-testsuite=Browser
+          composer test:application
           vendor/bin/pest --agent='$this->get("/")->assertOk();'
