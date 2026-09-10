@@ -222,7 +222,10 @@ test('configure-boost preserves developer choices and adds guidance idempotently
         $firstConfiguration = file_get_contents($directory . '/boost.json');
         $second = runComposerScript('configure-boost', $directory);
 
-        expect($firstConfiguration)->toBeString();
+        if ($firstConfiguration === false) {
+            throw new RuntimeException('Unable to read configured Boost fixture.');
+        }
+
         $configuration = json_decode($firstConfiguration, true, flags: JSON_THROW_ON_ERROR);
 
         expect($first->isSuccessful())->toBeTrue($first->getErrorOutput())
